@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { httpClient } from '../../infrastructure/api/httpClient';
 import { OfflineStorage } from '../../infrastructure/storage/indexedDb';
 import type { Report, CreateReportInput } from '../../domain/entities/report';
+import { compressImage } from '../../infrastructure/utils/imageCompressor';
 
 const REPORTS_CACHE_KEY = 'reports';
 
@@ -37,10 +38,23 @@ export const useCreateReport = () => {
 
   return useMutation({
     mutationFn: async (newReport: CreateReportInput) => {
+      // Compress image if provided (whether online or offline)
+      let compressedImage = newReport.image;
+      if (newReport.image instanceof File) {
+        try {
+          compressedImage = await compressImage(newReport.image);
+        } catch (err) {
+          console.error('Failed to compress image, using original:', err);
+        }
+      }
+
       // 1. Check if device is online
       if (!navigator.onLine) {
         // Save to IndexedDB offline queue
-        const tempId = await OfflineStorage.saveOfflineReport(newReport);
+        const tempId = await OfflineStorage.saveOfflineReport({
+          ...newReport,
+          image: compressedImage,
+        });
         return {
           isOfflineSaved: true,
           tempId,
@@ -57,8 +71,9 @@ export const useCreateReport = () => {
       formData.append('longitude', newReport.longitude.toString());
       if (newReport.address) formData.append('address', newReport.address);
       if (newReport.district) formData.append('district', newReport.district);
-      if (newReport.image) {
-        formData.append('image', newReport.image);
+      if (compressedImage) {
+        // Append compressed image
+        formData.append('image', compressedImage, 'report_image.jpg');
       }
 
       const response = await httpClient.post<any, Report>('/reports', formData, {
@@ -101,9 +116,15 @@ export const useSyncOfflineReports = () => {
           formData.append('longitude', report.longitude.toString());
           if (report.address) formData.append('address', report.address);
           if (report.district) formData.append('district', report.district);
-          // Note: Image upload for offline sync would require storing the image as Blob in DB.
+          if (report.image) {
+            formData.append('image', report.image, 'report_image.jpg');
+          }
           
-          await httpClient.post('/reports', formData);
+          await httpClient.post('/reports', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
           await OfflineStorage.deleteOfflineReport(report.tempId);
           syncedCount++;
         } catch (err) {

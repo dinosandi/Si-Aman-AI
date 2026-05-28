@@ -44,5 +44,5 @@ export interface CreateReportInput {
   longitude: number;
   address?: string;
   district?: string;
-  image?: File;
+  image?: File | Blob;
 }

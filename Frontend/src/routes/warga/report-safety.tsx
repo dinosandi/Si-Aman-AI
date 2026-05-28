@@ -33,6 +33,7 @@ function WargaReportSafety() {
       district: '',
       latitude: 0,
       longitude: 0,
+      image: undefined as File | undefined,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -221,6 +222,66 @@ function WargaReportSafety() {
                 )}
               </div>
             )}
+          </form.Field>
+
+          {/* Image Upload Field */}
+          <form.Field name="image">
+            {(field) => {
+              const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+              const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  field.handleChange(file);
+                  setPreviewUrl(URL.createObjectURL(file));
+                } else {
+                  field.handleChange(undefined);
+                  setPreviewUrl(null);
+                }
+              };
+
+              return (
+                <div className="space-y-1">
+                  <label htmlFor="image-upload" className="text-xs font-bold text-slate-500 block">
+                    Foto Kejadian / Lokasi (Opsional)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      id="image-upload"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-900 transition-all flex items-center gap-2"
+                    >
+                      <span>Pilih Foto</span>
+                    </label>
+                    {field.state.value && (
+                      <span className="text-[10px] text-slate-400 truncate max-w-[150px]">
+                        {(field.state.value as File).name}
+                      </span>
+                    )}
+                  </div>
+                  {previewUrl && (
+                    <div className="mt-2 relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                      <img src={previewUrl} alt="Preview aduan" className="max-h-full object-contain" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          field.handleChange(undefined);
+                          setPreviewUrl(null);
+                        }}
+                        className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg hover:bg-red-500 shadow-sm"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            }}
           </form.Field>
 
           {/* GPS Coordinates Group */}
