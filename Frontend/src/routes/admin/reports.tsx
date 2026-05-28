@@ -21,7 +21,7 @@ function AdminReportsManager() {
   const { data: serverReports, isLoading, refetch } = useReports();
   const [globalFilter, setGlobalFilter] = useState('');
 
-  // Local fallback mock data if server is offline/not seeded yet
+  // Local fallback mock data if server is offline
   const fallbackReports: Report[] = useMemo(() => [
     {
       id: 'REP-001',
@@ -112,12 +112,12 @@ function AdminReportsManager() {
         cell: (info) => {
           const cat = info.getValue() as ReportCategory;
           const config: Record<ReportCategory, { label: string; style: string }> = {
-            crime: { label: 'Kriminalitas', style: 'bg-red-500/10 text-red-400 border-red-500/20' },
-            hazard: { label: 'Bahaya Jalan', style: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-            natural_disaster: { label: 'Bencana Alam', style: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
-            road_block: { label: 'Jalan Ditutup', style: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
-            accident: { label: 'Kecelakaan', style: 'bg-rose-500/10 text-rose-400 border-rose-500/20' },
-            other: { label: 'Lainnya', style: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
+            crime: { label: 'Kriminalitas', style: 'bg-red-50 text-red-700 border-red-200' },
+            hazard: { label: 'Bahaya Jalan', style: 'bg-amber-50 text-amber-700 border-amber-200' },
+            natural_disaster: { label: 'Bencana Alam', style: 'bg-orange-50 text-orange-700 border-orange-200' },
+            road_block: { label: 'Jalan Ditutup', style: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+            accident: { label: 'Kecelakaan', style: 'bg-rose-50 text-rose-700 border-rose-200' },
+            other: { label: 'Lainnya', style: 'bg-slate-100 text-slate-700 border-slate-200' },
           };
           const match = config[cat] || config.other;
           return (
@@ -134,11 +134,11 @@ function AdminReportsManager() {
           const row = info.row.original;
           return (
             <div className="space-y-1">
-              <span className="font-semibold text-slate-100 text-xs sm:text-sm block leading-snug">
+              <span className="font-bold text-slate-800 text-xs sm:text-sm block leading-snug">
                 {row.title}
               </span>
-              <span className="text-[10px] text-slate-400 block font-medium">
-                Kecamatan: <span className="text-teal-400 font-bold">{row.location.district || 'Madiun'}</span> • GPS: {row.location.latitude.toFixed(4)}, {row.location.longitude.toFixed(4)}
+              <span className="text-[10px] text-slate-500 block font-bold">
+                Kecamatan: <span className="text-teal-600">{row.location.district || 'Madiun'}</span> • GPS: {row.location.latitude.toFixed(4)}, {row.location.longitude.toFixed(4)}
               </span>
             </div>
           );
@@ -147,7 +147,7 @@ function AdminReportsManager() {
       {
         accessorKey: 'upvotes',
         header: 'Upvotes',
-        cell: (info) => <span className="font-bold text-slate-300">{info.getValue() as number} 👍</span>,
+        cell: (info) => <span className="font-bold text-slate-600">{info.getValue() as number} 👍</span>,
       },
       {
         accessorKey: 'status',
@@ -155,10 +155,10 @@ function AdminReportsManager() {
         cell: (info) => {
           const status = info.getValue() as ReportStatus;
           const config: Record<ReportStatus, { label: string; style: string }> = {
-            pending: { label: 'Menunggu', style: 'bg-amber-500/20 text-amber-300' },
-            verified: { label: 'Terverifikasi', style: 'bg-teal-500/20 text-teal-300' },
-            resolved: { label: 'Selesai', style: 'bg-emerald-500/20 text-emerald-300' },
-            rejected: { label: 'Ditolak', style: 'bg-red-500/20 text-red-300' },
+            pending: { label: 'Menunggu', style: 'bg-amber-50 border border-amber-250 text-amber-700' },
+            verified: { label: 'Terverifikasi', style: 'bg-teal-50 border border-teal-250 text-teal-700' },
+            resolved: { label: 'Selesai', style: 'bg-emerald-50 border border-emerald-250 text-emerald-700' },
+            rejected: { label: 'Ditolak', style: 'bg-red-50 border border-red-250 text-red-700' },
           };
           return (
             <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${config[status].style}`}>
@@ -173,12 +173,12 @@ function AdminReportsManager() {
         cell: (info) => {
           const row = info.row.original;
           return (
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {row.status === 'pending' && (
                 <button
                   onClick={() => handleVerify(row.id)}
                   title="Verifikasi Laporan"
-                  className="p-1.5 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 text-teal-400 rounded-lg transition-all"
+                  className="p-1.5 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-700 rounded-lg transition-colors"
                 >
                   <ShieldCheck className="w-4 h-4" />
                 </button>
@@ -187,7 +187,7 @@ function AdminReportsManager() {
                 <button
                   onClick={() => handleResolve(row.id)}
                   title="Selesaikan Kejadian"
-                  className="p-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 rounded-lg transition-all"
+                  className="p-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg transition-colors"
                 >
                   <CheckCircle className="w-4 h-4" />
                 </button>
@@ -196,7 +196,7 @@ function AdminReportsManager() {
                 <button
                   onClick={() => handleReject(row.id)}
                   title="Tolak Laporan"
-                  className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all"
+                  className="p-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-lg transition-colors"
                 >
                   <XCircle className="w-4 h-4" />
                 </button>
@@ -240,14 +240,14 @@ function AdminReportsManager() {
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             placeholder="Cari aduan atau wilayah..."
-            className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-800 bg-slate-950 text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-teal-500"
           />
         </div>
 
         {/* Refresh Trigger */}
         <button
           onClick={() => refetch()}
-          className="px-4 py-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-2 transition-all w-full sm:w-auto justify-center"
+          className="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2 transition-colors w-full sm:w-auto justify-center"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Muat Ulang Data</span>
@@ -255,16 +255,16 @@ function AdminReportsManager() {
       </div>
 
       {/* Main Datagrid Container */}
-      <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-slate-800 bg-slate-950">
+                <tr key={headerGroup.id} className="border-b border-slate-200 bg-slate-50">
                   {headerGroup.headers.map((header) => (
                     <th
                       key={header.id}
-                      className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider select-none cursor-pointer hover:text-slate-200"
+                      className="px-6 py-3.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider select-none cursor-pointer hover:text-slate-700"
                       onClick={header.column.getToggleSortingHandler()}
                     >
                       <div className="flex items-center gap-2">
@@ -282,13 +282,13 @@ function AdminReportsManager() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-6 py-12 text-center text-xs text-slate-500">
+                  <td colSpan={columns.length} className="px-6 py-12 text-center text-xs text-slate-400">
                     Memuat Laporan...
                   </td>
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-6 py-12 text-center text-xs text-slate-500">
+                  <td colSpan={columns.length} className="px-6 py-12 text-center text-xs text-slate-400">
                     Tidak ada laporan ditemukan.
                   </td>
                 </tr>
@@ -296,7 +296,7 @@ function AdminReportsManager() {
                 table.getRowModel().rows.map((row) => (
                   <tr
                     key={row.id}
-                    className="border-b border-slate-800 hover:bg-slate-900/50 transition-all"
+                    className="border-b border-slate-150 hover:bg-slate-50/50 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <td key={cell.id} className="px-6 py-4 text-xs">
@@ -311,24 +311,24 @@ function AdminReportsManager() {
         </div>
 
         {/* Pagination Controllers */}
-        <div className="p-4 border-t border-slate-800 flex justify-between items-center bg-slate-950">
-          <div className="text-xs text-slate-400">
-            Menampilkan halaman{' '}
-            <span className="font-bold text-slate-200">{table.getState().pagination.pageIndex + 1}</span> dari{' '}
-            <span className="font-bold text-slate-200">{table.getPageCount()}</span>
+        <div className="p-4 border-t border-slate-200 flex justify-between items-center bg-white">
+          <div className="text-xs text-slate-500 font-bold">
+            Halaman{' '}
+            <span className="text-slate-800">{table.getState().pagination.pageIndex + 1}</span> dari{' '}
+            <span className="text-slate-800">{table.getPageCount()}</span>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded-lg text-slate-400 disabled:opacity-30 disabled:pointer-events-none transition-all"
+              className="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="p-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 rounded-lg text-slate-400 disabled:opacity-30 disabled:pointer-events-none transition-all"
+              className="p-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-slate-600 disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

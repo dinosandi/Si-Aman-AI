@@ -70,28 +70,28 @@ function WargaReportSafety() {
   };
 
   return (
-    <div className="flex flex-col flex-1 p-5 space-y-4">
+    <div className="flex flex-col flex-1 p-5 space-y-4 bg-slate-50">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <div className="bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20">
-          <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-100">
+          <FileText className="w-5 h-5 text-emerald-600" />
         </div>
         <div>
-          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">Laporkan Kerawanan Wilayah</h3>
+          <h3 className="font-extrabold text-slate-800 text-sm">Laporkan Kerawanan Wilayah</h3>
           <p className="text-[10px] text-slate-400">Laporkan lubang jalan, pohon tumbang, kriminalitas, dll.</p>
         </div>
       </div>
 
       {/* Success banner */}
       {successMessage && (
-        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-2xl flex items-start gap-2.5 animate-fade-in-up">
+        <div className="p-4 bg-emerald-50 border border-emerald-250 rounded-2xl flex items-start gap-2.5 animate-fade-in-up">
           <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300">Laporan Tercatat</h4>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1">{successMessage}</p>
+            <h4 className="text-xs font-bold text-emerald-800">Laporan Tercatat</h4>
+            <p className="text-[10px] text-slate-500 leading-relaxed mt-1">{successMessage}</p>
             <button
               onClick={() => setSuccessMessage(null)}
-              className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold underline mt-2"
+              className="text-[10px] text-emerald-600 font-bold underline mt-2"
             >
               Buat Laporan Baru
             </button>
@@ -101,7 +101,7 @@ function WargaReportSafety() {
 
       {/* Connection notification if offline */}
       {!navigator.onLine && (
-        <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-center gap-2 text-[10px] text-amber-800 dark:text-amber-300">
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-2 text-[10px] text-amber-800">
           <WifiOff className="w-4 h-4 shrink-0" />
           <span>Koneksi Offline. Laporan akan disimpan di HP Anda dan dikirim saat internet aktif.</span>
         </div>
@@ -114,7 +114,7 @@ function WargaReportSafety() {
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-4"
+          className="bg-white border border-slate-200 p-5 rounded-2xl space-y-4"
         >
           {/* Category */}
           <form.Field name="category">
@@ -126,7 +126,7 @@ function WargaReportSafety() {
                   name={field.name}
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value as ReportCategory)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="hazard">Bahaya Jalan (Pohon, Kabel, Jalan Rusak)</option>
                   <option value="crime">Tindakan Kriminal (Pencurian, Begal, Sajam)</option>
@@ -156,7 +156,7 @@ function WargaReportSafety() {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Misal: Pohon tumbang menutup jalan lingkar"
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
                 {field.state.meta.errors && (
                   <span className="text-[10px] text-red-500 mt-0.5 block px-1">
@@ -185,7 +185,7 @@ function WargaReportSafety() {
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Jelaskan kondisi secara detil (misal: menghalangi total jalan, bisa dilewati motor saja)"
                   rows={3}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
                 {field.state.meta.errors && (
                   <span className="text-[10px] text-red-500 mt-0.5 block px-1">
@@ -213,7 +213,7 @@ function WargaReportSafety() {
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder="Misal: Saradan, Dagangan, Kare"
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
                 {field.state.meta.errors && (
                   <span className="text-[10px] text-red-500 mt-0.5 block px-1">
@@ -254,7 +254,7 @@ function WargaReportSafety() {
                     />
                     <label
                       htmlFor="image-upload"
-                      className="cursor-pointer px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-600 dark:text-slate-400 font-semibold hover:bg-slate-100 dark:hover:bg-slate-900 transition-all flex items-center gap-2"
+                      className="cursor-pointer px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 font-semibold hover:bg-slate-100 transition-colors flex items-center gap-2"
                     >
                       <span>Pilih Foto</span>
                     </label>
@@ -265,7 +265,7 @@ function WargaReportSafety() {
                     )}
                   </div>
                   {previewUrl && (
-                    <div className="mt-2 relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                    <div className="mt-2 relative w-full h-40 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
                       <img src={previewUrl} alt="Preview aduan" className="max-h-full object-contain" />
                       <button
                         type="button"
@@ -285,13 +285,13 @@ function WargaReportSafety() {
           </form.Field>
 
           {/* GPS Coordinates Group */}
-          <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-[11px] font-bold text-slate-500">Koordinat Lokasi Kejadian</span>
               <button
                 type="button"
                 onClick={acquireGPS}
-                className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-lg text-[10px] transition-all flex items-center gap-1"
+                className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-600 font-bold rounded-lg text-[10px] transition-colors flex items-center gap-1"
               >
                 <Compass className={`w-3.5 h-3.5 ${gpsLoading ? 'animate-spin' : ''}`} />
                 <span>{gpsLoading ? 'Melacak GPS...' : 'Gunakan GPS HP'}</span>
@@ -315,7 +315,7 @@ function WargaReportSafety() {
                       name={field.name}
                       value={field.state.value}
                       onChange={(e) => field.handleChange(parseFloat(e.target.value) || 0)}
-                      className="w-full text-[10px] p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="w-full text-[10px] p-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
                 )}
@@ -337,7 +337,7 @@ function WargaReportSafety() {
                       name={field.name}
                       value={field.state.value}
                       onChange={(e) => field.handleChange(parseFloat(e.target.value) || 0)}
-                      className="w-full text-[10px] p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      className="w-full text-[10px] p-2 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
                 )}
@@ -350,7 +350,7 @@ function WargaReportSafety() {
               <button
                 type="submit"
                 disabled={!canSubmit || isSubmitting || createReport.isPending}
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/10 hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{isSubmitting || createReport.isPending ? 'Mengirim Laporan...' : 'Kirim Laporan Kerawanan'}</span>
