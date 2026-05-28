@@ -1,0 +1,303 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
+import { useState } from 'react';
+import { useCreateReport } from '../../use-cases/hooks/useReports';
+import type { ReportCategory } from '../../domain/entities/report';
+import { FileText, Compass, CheckCircle, WifiOff, Send } from 'lucide-react';
+
+export const Route = createFileRoute('/warga/report-safety')({
+  component: WargaReportSafety,
+});
+
+const reportValidationSchema = z.object({
+  category: z.enum(['crime', 'accident', 'natural_disaster', 'hazard', 'road_block', 'other']),
+  title: z.string().min(5, 'Judul minimal 5 karakter'),
+  description: z.string().min(10, 'Deskripsi kejadian minimal 10 karakter'),
+  district: z.string().min(3, 'Nama kecamatan wajib diisi'),
+  latitude: z.number({ message: 'Latitude wajib diisi' }),
+  longitude: z.number({ message: 'Longitude wajib diisi' }),
+});
+
+function WargaReportSafety() {
+  const createReport = useCreateReport();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+
+  // TanStack Form Setup
+  const form = useForm({
+    defaultValues: {
+      category: 'hazard' as ReportCategory,
+      title: '',
+      description: '',
+      district: '',
+      latitude: 0,
+      longitude: 0,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const result = await createReport.mutateAsync(value);
+        setSuccessMessage(result.message);
+        form.reset();
+      } catch (err) {
+        console.error(err);
+      }
+    },
+  });
+
+  const acquireGPS = () => {
+    setGpsLoading(true);
+    if (!navigator.geolocation) {
+      alert('Geolocation tidak didukung browser.');
+      setGpsLoading(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        form.setFieldValue('latitude', pos.coords.latitude);
+        form.setFieldValue('longitude', pos.coords.longitude);
+        setGpsLoading(false);
+      },
+      () => {
+        // Fallback mockup coordinate in Madiun
+        form.setFieldValue('latitude', -7.6167);
+        form.setFieldValue('longitude', 111.6500);
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
+  return (
+    <div className="flex flex-col flex-1 p-5 space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <div className="bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20">
+          <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div>
+          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">Laporkan Kerawanan Wilayah</h3>
+          <p className="text-[10px] text-slate-400">Laporkan lubang jalan, pohon tumbang, kriminalitas, dll.</p>
+        </div>
+      </div>
+
+      {/* Success banner */}
+      {successMessage && (
+        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-2xl flex items-start gap-2.5 animate-fade-in-up">
+          <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-300">Laporan Tercatat</h4>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed mt-1">{successMessage}</p>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold underline mt-2"
+            >
+              Buat Laporan Baru
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Connection notification if offline */}
+      {!navigator.onLine && (
+        <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-2xl flex items-center gap-2 text-[10px] text-amber-800 dark:text-amber-300">
+          <WifiOff className="w-4 h-4 shrink-0" />
+          <span>Koneksi Offline. Laporan akan disimpan di HP Anda dan dikirim saat internet aktif.</span>
+        </div>
+      )}
+
+      {!successMessage && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 rounded-2xl shadow-sm space-y-4"
+        >
+          {/* Category */}
+          <form.Field name="category">
+            {(field) => (
+              <div className="space-y-1">
+                <label htmlFor={field.name} className="text-xs font-bold text-slate-500 block">Kategori Kejadian</label>
+                <select
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value as ReportCategory)}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="hazard">Bahaya Jalan (Pohon, Kabel, Jalan Rusak)</option>
+                  <option value="crime">Tindakan Kriminal (Pencurian, Begal, Sajam)</option>
+                  <option value="accident">Kecelakaan Lalu Lintas</option>
+                  <option value="natural_disaster">Bencana Alam (Tanah Longsor, Banjir)</option>
+                  <option value="road_block">Penutupan Jalan / Hambatan</option>
+                  <option value="other">Kejadian Lainnya</option>
+                </select>
+              </div>
+            )}
+          </form.Field>
+
+          {/* Title */}
+          <form.Field
+            name="title"
+            validators={{
+              onChange: reportValidationSchema.shape.title,
+            }}
+          >
+            {(field) => (
+              <div className="space-y-1">
+                <label htmlFor={field.name} className="text-xs font-bold text-slate-500 block">Judul Laporan</label>
+                <input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Misal: Pohon tumbang menutup jalan lingkar"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                {field.state.meta.errors && (
+                  <span className="text-[10px] text-red-500 mt-0.5 block px-1">
+                    {field.state.meta.errors.join(', ')}
+                  </span>
+                )}
+              </div>
+            )}
+          </form.Field>
+
+          {/* Description */}
+          <form.Field
+            name="description"
+            validators={{
+              onChange: reportValidationSchema.shape.description,
+            }}
+          >
+            {(field) => (
+              <div className="space-y-1">
+                <label htmlFor={field.name} className="text-xs font-bold text-slate-500 block">Deskripsi Detail</label>
+                <textarea
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Jelaskan kondisi secara detil (misal: menghalangi total jalan, bisa dilewati motor saja)"
+                  rows={3}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                {field.state.meta.errors && (
+                  <span className="text-[10px] text-red-500 mt-0.5 block px-1">
+                    {field.state.meta.errors.join(', ')}
+                  </span>
+                )}
+              </div>
+            )}
+          </form.Field>
+
+          {/* District */}
+          <form.Field
+            name="district"
+            validators={{
+              onChange: reportValidationSchema.shape.district,
+            }}
+          >
+            {(field) => (
+              <div className="space-y-1">
+                <label htmlFor={field.name} className="text-xs font-bold text-slate-500 block">Kecamatan Wilayah</label>
+                <input
+                  id={field.name}
+                  name={field.name}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Misal: Saradan, Dagangan, Kare"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                {field.state.meta.errors && (
+                  <span className="text-[10px] text-red-500 mt-0.5 block px-1">
+                    {field.state.meta.errors.join(', ')}
+                  </span>
+                )}
+              </div>
+            )}
+          </form.Field>
+
+          {/* GPS Coordinates Group */}
+          <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] font-bold text-slate-500">Koordinat Lokasi Kejadian</span>
+              <button
+                type="button"
+                onClick={acquireGPS}
+                className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold rounded-lg text-[10px] transition-all flex items-center gap-1"
+              >
+                <Compass className={`w-3.5 h-3.5 ${gpsLoading ? 'animate-spin' : ''}`} />
+                <span>{gpsLoading ? 'Melacak GPS...' : 'Gunakan GPS HP'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <form.Field
+                name="latitude"
+                validators={{
+                  onChange: reportValidationSchema.shape.latitude,
+                }}
+              >
+                {(field) => (
+                  <div>
+                    <label htmlFor={field.name} className="text-[9px] text-slate-400 uppercase tracking-wider block mb-1">Latitude</label>
+                    <input
+                      type="number"
+                      step="any"
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(parseFloat(e.target.value) || 0)}
+                      className="w-full text-[10px] p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+              </form.Field>
+
+              <form.Field
+                name="longitude"
+                validators={{
+                  onChange: reportValidationSchema.shape.longitude,
+                }}
+              >
+                {(field) => (
+                  <div>
+                    <label htmlFor={field.name} className="text-[9px] text-slate-400 uppercase tracking-wider block mb-1">Longitude</label>
+                    <input
+                      type="number"
+                      step="any"
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(parseFloat(e.target.value) || 0)}
+                      className="w-full text-[10px] p-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+              </form.Field>
+            </div>
+          </div>
+
+          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+            {([canSubmit, isSubmitting]) => (
+              <button
+                type="submit"
+                disabled={!canSubmit || isSubmitting || createReport.isPending}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/10 hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>{isSubmitting || createReport.isPending ? 'Mengirim Laporan...' : 'Kirim Laporan Kerawanan'}</span>
+              </button>
+            )}
+          </form.Subscribe>
+        </form>
+      )}
+    </div>
+  );
+}
