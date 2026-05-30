@@ -2,9 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
 import { useSafetyRoutes } from "../../use-cases/hooks/useSafetyRoutes";
 import type { RouteRequestInput } from "../../domain/entities/route";
-import { Compass, Search, Bell, Plus, Settings } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { SearchHeader } from "./components/SearchHeader";
+import { RouteDrawer } from "./components/RouteDrawer";
+import { BottomNav } from "./components/BottomNav";
 
 // Fix Leaflet marker icons in Vite
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -199,38 +201,14 @@ function WargaDashboard() {
       <div ref={mapRef} className="w-full h-full z-0 absolute inset-0" />
 
       {/* Floating Header: Search & Notification Bell */}
-      <div className="absolute top-4 left-4 right-4 z-1000 flex items-center gap-3">
-        {/* Search Input Box */}
-        <form
-          onSubmit={handleSearchSubmit}
-          className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm"
-        >
-          <Search className="w-4 h-4 text-slate-400 shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari Lokasi Tujuan"
-            className="w-full text-xs text-slate-700 bg-transparent outline-none placeholder-slate-400"
-          />
-        </form>
-
-        {/* Bell Button with badge 5 */}
-        <button
-          type="button"
-          onClick={() =>
-            alert(
-              "Anda memiliki 5 pemberitahuan keamanan baru di sekitar Madiun.",
-            )
-          }
-          className="relative w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-600 active:scale-95 transition-transform shrink-0"
-        >
-          <Bell className="w-4.5 h-4.5" />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white">
-            5
-          </span>
-        </button>
-      </div>
+      <SearchHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSubmit={handleSearchSubmit}
+        onNotificationClick={() =>
+          alert("Anda memiliki 5 pemberitahuan keamanan baru di sekitar Madiun.")
+        }
+      />
 
       {/* Geocoding Loading Indicator Overlay */}
       {geocodingLoading && (
@@ -241,101 +219,24 @@ function WargaDashboard() {
       )}
 
       {/* Route Details Sliding Drawer overlay */}
-      {routes && routes.length > 0 && !geocodingLoading && (
-        <div className="absolute bottom-24 left-4 right-4 z-1000 bg-white border border-slate-200 p-4 rounded-2xl shadow-lg space-y-3 animate-fade-in-up">
-          <div className="flex justify-between items-start">
-            <div>
-              <span className="text-[9px] uppercase font-extrabold text-[#114B5F] tracking-wider block">
-                Rute Rekomendasi Teratas
-              </span>
-              <h4 className="font-extrabold text-slate-800 text-sm">
-                {routes[0].name}
-              </h4>
-            </div>
-            <button
-              onClick={() => {
-                setRouteParams(null);
-                setSearchQuery("");
-              }}
-              className="text-slate-400 hover:text-slate-600 text-[10px] font-bold bg-slate-50 hover:bg-slate-100 px-2 py-1 rounded-lg border border-slate-200"
-            >
-              Clear
-            </button>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-2 py-1.5 px-3 bg-slate-50 rounded-xl text-center border border-slate-100">
-            <div>
-              <span className="text-[9px] text-slate-400 block font-medium">
-                Jarak
-              </span>
-              <span className="text-xs font-extrabold text-slate-800">
-                {routes[0].distanceKm} Km
-              </span>
-            </div>
-            <div>
-              <span className="text-[9px] text-slate-400 block font-medium">
-                Waktu
-              </span>
-              <span className="text-xs font-extrabold text-slate-800">
-                {routes[0].durationMinutes} Min
-              </span>
-            </div>
-            <div>
-              <span className="text-[9px] text-slate-400 block font-medium">
-                Laporan Aktif
-              </span>
-              <span className="text-xs font-extrabold text-red-600">
-                {routes[0].hazardCount} Aduan
-              </span>
-            </div>
-          </div>
-
-          {/* AI Safety Recommendation */}
-          <div className="bg-teal-50 p-2.5 rounded-xl border border-teal-100 text-[11px] leading-relaxed text-[#114B5F] font-semibold">
-            <span className="font-bold text-teal-800 block mb-0.5">
-              💡 Rekomendasi AI:
-            </span>
-            {routes[0].aiRecommendation}
-          </div>
-        </div>
+      {!geocodingLoading && (
+        <RouteDrawer
+          routes={routes}
+          onClear={() => {
+            setRouteParams(null);
+            setSearchQuery("");
+          }}
+        />
       )}
 
       {/* Floating Bottom Navigation Bar (Refined & Compact) */}
-      <div className="absolute bottom-4 left-4 right-4 z-1000 bg-white border border-slate-200 rounded-xl py-1.5 px-6 flex justify-between items-center shadow-sm">
-        {/* Left: Compass / Recenter */}
-        <button
-          type="button"
-          onClick={handleRecenter}
-          className="flex flex-col items-center justify-center text-[#114B5F] hover:text-[#0e3b4b] active:scale-95 transition-transform py-1"
-          title="Recenter Map"
-        >
-          <Compass className="w-5 h-5" />
-          <span className="w-3.5 h-0.5 bg-[#114B5F] rounded-full mt-1"></span>
-        </button>
-
-        {/* Center: Floating Circle Plus Action Button */}
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/warga/report-safety" })}
-          className="w-12 h-12 bg-[#114B5F] hover:bg-[#0e3b4b] text-white rounded-full flex items-center justify-center -translate-y-5 border-4 border-white shadow-md active:scale-95 transition-transform shrink-0"
-          title="Lapor Kerawanan Baru"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
-
-        {/* Right: Settings cog */}
-        <button
-          type="button"
-          onClick={() =>
-            alert("Menu pengaturan peta sedang dalam pengembangan.")
-          }
-          className="text-slate-400 hover:text-slate-600 active:scale-95 transition-transform py-2"
-          title="Settings"
-        >
-          <Settings className="w-5 h-5" />
-        </button>
-      </div>
+      <BottomNav
+        onRecenter={handleRecenter}
+        onPlusClick={() => navigate({ to: "/warga/report-safety" })}
+        onSettingsClick={() =>
+          alert("Menu pengaturan peta sedang dalam pengembangan.")
+        }
+      />
     </div>
   );
 }
