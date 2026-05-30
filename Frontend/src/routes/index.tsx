@@ -1,46 +1,31 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { GettingStarted } from "./warga/components/GettingStarted";
 
 export const Route = createFileRoute("/")({
-  component: GettingStartedPage,
+  component: IndexPage,
 });
 
-function GettingStartedPage() {
-  return (
-    <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen">
-      {/* Mobile-first constraints frame */}
-      <div className="w-full max-w-md min-h-screen bg-white border-x border-slate-200 flex flex-col overflow-hidden">
-        {/* Full width top image asset */}
-        <div className="w-full">
-          <img
-            src="/img/getting-started.png"
-            alt="Getting Started"
-            className="w-full object-cover aspect-4/3 sm:aspect-auto"
-          />
-        </div>
+function IndexPage() {
+  const navigate = useNavigate();
 
-        {/* Text & Button content section */}
-        <div className="flex-1 bg-white px-8 py-8 flex flex-col justify-between text-center">
-          <div className="my-auto space-y-4">
-            <h2 className="text-xl font-bold text-slate-900 leading-tight">
-              Langkah Pertama menuju perjalanan aman dan nyaman
-            </h2>
-            <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Si Aman AI memetakan keamanan Madiun secara real-time dari laporan
-              Anda. Temukan rute teraman, bukan sekadar tercepat, dengan
-              kekuatan AI dan komunitas
-            </p>
-          </div>
+  useEffect(() => {
+    const hasStarted = localStorage.getItem("warga_has_started") === "true";
+    if (hasStarted) {
+      navigate({ to: "/warga", replace: true });
+    }
+  }, [navigate]);
 
-          <div className="mt-8 mb-4">
-            <Link
-              to="/warga"
-              className="w-full inline-flex justify-center items-center py-3.5 bg-[#114B5F] hover:bg-[#0d3b4b] text-white font-bold text-xs rounded-lg transition-colors tracking-wide"
-            >
-              Mulai
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const handleStart = () => {
+    localStorage.setItem("warga_has_started", "true");
+    navigate({ to: "/warga" });
+  };
+
+  // Guard rendering
+  const hasStarted = localStorage.getItem("warga_has_started") === "true";
+  if (hasStarted) {
+    return null;
+  }
+
+  return <GettingStarted onStart={handleStart} />;
 }
