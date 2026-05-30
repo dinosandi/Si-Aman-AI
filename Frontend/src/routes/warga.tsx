@@ -1,9 +1,28 @@
-import { createFileRoute, Outlet, Link, useLocation } from '@tanstack/react-router';
-import { Home, ShieldAlert, FileText, Wifi, WifiOff, LogOut, Mail, Lock, Eye, EyeOff, User, Phone, MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useSyncOfflineReports } from '../use-cases/hooks/useReports';
+import {
+  createFileRoute,
+  Outlet,
+  Link,
+  useLocation,
+} from "@tanstack/react-router";
+import {
+  Home,
+  ShieldAlert,
+  FileText,
+  Wifi,
+  WifiOff,
+  LogOut,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Phone,
+  MapPin,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSyncOfflineReports } from "../use-cases/hooks/useReports";
 
-export const Route = createFileRoute('/warga')({
+export const Route = createFileRoute("/warga")({
   component: WargaLayout,
 });
 
@@ -14,7 +33,7 @@ function WargaLayout() {
 
   // Local Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('warga_authenticated') === 'true';
+    return localStorage.getItem("warga_authenticated") === "true";
   });
 
   useEffect(() => {
@@ -24,28 +43,28 @@ function WargaLayout() {
     };
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     if (navigator.onLine && isAuthenticated) {
       syncOfflineReports.mutate();
     }
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [isAuthenticated]);
 
   const handleLogout = () => {
-    localStorage.removeItem('warga_authenticated');
-    localStorage.removeItem('warga_current_user');
+    localStorage.removeItem("warga_authenticated");
+    localStorage.removeItem("warga_current_user");
     setIsAuthenticated(false);
   };
 
   const isActive = (path: string) => {
-    if (path === '/warga' && location.pathname === '/warga') return true;
-    if (path !== '/warga' && location.pathname.startsWith(path)) return true;
+    if (path === "/warga" && location.pathname === "/warga") return true;
+    if (path !== "/warga" && location.pathname.startsWith(path)) return true;
     return false;
   };
 
@@ -54,103 +73,107 @@ function WargaLayout() {
     return (
       <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen">
         <div className="w-full max-w-md min-h-screen bg-white border-x border-slate-200 p-6 flex flex-col justify-between overflow-hidden">
-          
           <WargaAuthForm onLoginSuccess={() => setIsAuthenticated(true)} />
-          
         </div>
       </div>
     );
   }
 
+  const isDashboard = location.pathname === "/warga" || location.pathname === "/warga/";
+
   return (
     <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen">
       {/* Mobile Frame Container: Constraints to a mobile resolution on desktop for true Mobile-First UX */}
-      <div className="w-full max-w-md min-h-screen bg-white relative flex flex-col border-x border-slate-200">
-        
+      <div className="w-full max-w-md h-screen max-h-screen bg-white relative flex flex-col border-x border-slate-200 overflow-hidden">
         {/* Citizen Top Bar */}
-        <header className="sticky top-0 z-50 bg-[#114B5F] text-white px-4 py-3 flex justify-between items-center border-b border-[#0d3b4b]">
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-sm tracking-wide">SI AMAN Warga</span>
-            <span className="bg-emerald-500/20 text-[8px] uppercase font-extrabold px-1.5 py-0.5 rounded border border-emerald-400/30">
-              PWA
-            </span>
-          </div>
+        {!isDashboard && (
+          <header className="sticky top-0 z-50 bg-[#114B5F] text-white px-4 py-3 flex justify-between items-center border-b border-[#0d3b4b]">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm tracking-wide">
+                SI AMAN Warga
+              </span>
+              <span className="bg-emerald-500/20 text-[8px] uppercase font-extrabold px-1.5 py-0.5 rounded border border-emerald-400/30">
+                PWA
+              </span>
+            </div>
 
-          {/* Connection Indicator & Logout */}
-          <div className="flex items-center gap-2.5">
-            {isOnline ? (
-              <div className="flex items-center gap-0.5 text-emerald-100 text-[10px] bg-emerald-700/50 px-2 py-0.5 rounded-full">
-                <Wifi className="w-3 h-3" />
-                <span>Online</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-0.5 text-amber-100 text-[10px] bg-amber-600/70 px-2 py-0.5 rounded-full">
-                <WifiOff className="w-3 h-3" />
-                <span>Offline</span>
-              </div>
-            )}
-            <button
-              onClick={handleLogout}
-              title="Logout"
-              className="p-1 bg-[#0d3b4b] hover:bg-[#092934] rounded transition-colors text-white"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </header>
+            {/* Connection Indicator & Logout */}
+            <div className="flex items-center gap-2.5">
+              {isOnline ? (
+                <div className="flex items-center gap-0.5 text-emerald-100 text-[10px] bg-emerald-700/50 px-2 py-0.5 rounded-full">
+                  <Wifi className="w-3 h-3" />
+                  <span>Online</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-0.5 text-amber-100 text-[10px] bg-amber-600/70 px-2 py-0.5 rounded-full">
+                  <WifiOff className="w-3 h-3" />
+                  <span>Offline</span>
+                </div>
+              )}
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                className="p-1 bg-[#0d3b4b] hover:bg-[#092934] rounded transition-colors text-white"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </header>
+        )}
 
         {/* Sync Status Banner */}
-        {syncOfflineReports.isPending && (
+        {syncOfflineReports.isPending && !isDashboard && (
           <div className="bg-emerald-50 text-emerald-800 text-[10px] text-center py-1 px-4 border-b border-emerald-100 font-bold">
             Mensinkronisasikan laporan offline...
           </div>
         )}
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col pb-20 overflow-y-auto bg-slate-50">
+        <div className={`flex-1 flex flex-col relative w-full ${isDashboard ? "h-full overflow-hidden" : "pb-20 overflow-y-auto bg-slate-50"}`}>
           <Outlet />
         </div>
 
         {/* Citizen Bottom Navigation Bar */}
-        <nav className="absolute bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 py-2 px-4 flex justify-around items-center">
-          <Link
-            to="/warga"
-            className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
-              isActive('/warga') && location.pathname === '/warga'
-                ? 'text-[#114B5F] font-extrabold'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <Home className="w-4 h-4" />
-            <span className="text-[9px]">Rute & Peta</span>
-          </Link>
+        {!isDashboard && (
+          <nav className="absolute bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 py-2 px-4 flex justify-around items-center">
+            <Link
+              to="/warga"
+              className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
+                isActive("/warga") && location.pathname === "/warga"
+                  ? "text-[#114B5F] font-extrabold"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span className="text-[9px]">Rute & Peta</span>
+            </Link>
 
-          {/* Centered Large SOS Button */}
-          <Link
-            to="/warga/sos"
-            className="flex flex-col items-center gap-0.5 -translate-y-4"
-          >
-            <div className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center border-4 border-white transition-transform active:scale-95">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-            <span className="text-[9px] text-red-600 font-bold -mt-2">
-              DARURAT
-            </span>
-          </Link>
+            {/* Centered Large SOS Button */}
+            <Link
+              to="/warga/sos"
+              className="flex flex-col items-center gap-0.5 -translate-y-4"
+            >
+              <div className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center border-4 border-white transition-transform active:scale-95">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <span className="text-[9px] text-red-600 font-bold -mt-2">
+                DARURAT
+              </span>
+            </Link>
 
-          <Link
-            to="/warga/report-safety"
-            className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
-              isActive('/warga/report-safety')
-                ? 'text-[#114B5F] font-extrabold'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span className="text-[9px]">Lapor Rawat</span>
-          </Link>
-        </nav>
-
+            <Link
+              to="/warga/report-safety"
+              className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
+                isActive("/warga/report-safety")
+                  ? "text-[#114B5F] font-extrabold"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span className="text-[9px]">Lapor Rawat</span>
+            </Link>
+          </nav>
+        )}
       </div>
     </div>
   );
@@ -158,79 +181,94 @@ function WargaLayout() {
 
 // Subcomponent: Citizen Login & Registration Forms
 function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
-  const [view, setView] = useState<'login' | 'register' | 'complete_google_data'>('login');
+  const [view, setView] = useState<
+    "login" | "register" | "complete_google_data"
+  >("login");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  
+
   // Password visibility states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // Geolocation loading state
   const [gpsLoading, setGpsLoading] = useState(false);
 
   // Login states
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // Register states
-  const [regName, setRegName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirmPassword, setRegConfirmPassword] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regEmergencyPhone, setRegEmergencyPhone] = useState('');
-  const [regAddress, setRegAddress] = useState('');
-  const [regLatLong, setRegLatLong] = useState('');
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regEmergencyPhone, setRegEmergencyPhone] = useState("");
+  const [regAddress, setRegAddress] = useState("");
+  const [regLatLong, setRegLatLong] = useState("");
 
   // Handle mock login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    const storedUsers = localStorage.getItem('warga_users');
+    const storedUsers = localStorage.getItem("warga_users");
     const users = storedUsers
       ? JSON.parse(storedUsers)
-      : [{ email: 'warga@siaman.id', password: 'password123', name: 'Warga Madiun' }];
+      : [
+          {
+            email: "warga@siaman.id",
+            password: "password123",
+            name: "Warga Madiun",
+          },
+        ];
 
     const user = users.find(
-      (u: any) => u.email.toLowerCase() === email.toLowerCase().trim() && u.password === password
+      (u: any) =>
+        u.email.toLowerCase() === email.toLowerCase().trim() &&
+        u.password === password,
     );
 
     if (user) {
-      localStorage.setItem('warga_authenticated', 'true');
-      localStorage.setItem('warga_current_user', JSON.stringify(user));
+      localStorage.setItem("warga_authenticated", "true");
+      localStorage.setItem("warga_current_user", JSON.stringify(user));
       onLoginSuccess();
     } else {
-      setErrorMsg('Email atau kata sandi salah. (Gunakan: warga@siaman.id / password123)');
+      setErrorMsg(
+        "Email atau kata sandi salah. (Gunakan: warga@siaman.id / password123)",
+      );
     }
   };
 
   // Handle direct Google Login
   const handleGoogleLogin = () => {
-    localStorage.setItem('warga_authenticated', 'true');
-    localStorage.setItem('warga_current_user', JSON.stringify({ 
-      email: 'google.user@gmail.com', 
-      name: 'Google Warga Madiun',
-      phone: '081234567890',
-      emergencyPhone: '081234567899',
-      address: 'Madiun Kota',
-      latLong: '-7.616700, 111.650000'
-    }));
+    localStorage.setItem("warga_authenticated", "true");
+    localStorage.setItem(
+      "warga_current_user",
+      JSON.stringify({
+        email: "google.user@gmail.com",
+        name: "Google Warga Madiun",
+        phone: "081234567890",
+        emergencyPhone: "081234567899",
+        address: "Madiun Kota",
+        latLong: "-7.616700, 111.650000",
+      }),
+    );
     onLoginSuccess();
   };
 
   // Trigger Google onboarding view for Register
   const handleGoogleRegister = () => {
-    setRegEmail('google.user@gmail.com');
-    setRegName('Google Warga Madiun');
-    setView('complete_google_data');
+    setRegEmail("google.user@gmail.com");
+    setRegName("Google Warga Madiun");
+    setView("complete_google_data");
   };
 
   // Handle automatic geolocation for Lat, Long
   const handleAcquireGPS = () => {
     setGpsLoading(true);
     if (!navigator.geolocation) {
-      alert('Fitur GPS tidak didukung oleh browser Anda.');
+      alert("Fitur GPS tidak didukung oleh browser Anda.");
       setGpsLoading(false);
       return;
     }
@@ -242,12 +280,12 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         setGpsLoading(false);
       },
       (err) => {
-        console.warn('Geolocation failed, providing mock coords', err);
+        console.warn("Geolocation failed, providing mock coords", err);
         // Fallback coordination in Madiun
-        setRegLatLong('-7.616700, 111.650000');
+        setRegLatLong("-7.616700, 111.650000");
         setGpsLoading(false);
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
   };
 
@@ -256,43 +294,49 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (view === 'complete_google_data') {
+    if (view === "complete_google_data") {
       if (!regPassword || !regConfirmPassword) {
-        setErrorMsg('Harap lengkapi kolom kata sandi wajib.');
+        setErrorMsg("Harap lengkapi kolom kata sandi wajib.");
         return;
       }
     } else {
       if (!regName || !regEmail || !regPassword || !regConfirmPassword) {
-        setErrorMsg('Harap lengkapi kolom nama, email, dan sandi wajib.');
+        setErrorMsg("Harap lengkapi kolom nama, email, dan sandi wajib.");
         return;
       }
     }
 
     if (regPassword !== regConfirmPassword) {
-      setErrorMsg('Kata sandi dan konfirmasi kata sandi tidak cocok.');
+      setErrorMsg("Kata sandi dan konfirmasi kata sandi tidak cocok.");
       return;
     }
 
-    const storedUsers = localStorage.getItem('warga_users');
+    const storedUsers = localStorage.getItem("warga_users");
     const users = storedUsers
       ? JSON.parse(storedUsers)
-      : [{ email: 'warga@siaman.id', password: 'password123', name: 'Warga Madiun' }];
+      : [
+          {
+            email: "warga@siaman.id",
+            password: "password123",
+            name: "Warga Madiun",
+          },
+        ];
 
     // If it's standard registration, make sure email doesn't exist
-    if (view !== 'complete_google_data') {
+    if (view !== "complete_google_data") {
       const userExists = users.some(
-        (u: any) => u.email.toLowerCase() === regEmail.toLowerCase().trim()
+        (u: any) => u.email.toLowerCase() === regEmail.toLowerCase().trim(),
       );
 
       if (userExists) {
-        setErrorMsg('Email sudah terdaftar di sistem.');
+        setErrorMsg("Email sudah terdaftar di sistem.");
         return;
       }
     }
 
     const newUser = {
-      name: regName || 'Google Warga Madiun',
-      email: regEmail.trim() || 'google.user@gmail.com',
+      name: regName || "Google Warga Madiun",
+      email: regEmail.trim() || "google.user@gmail.com",
       password: regPassword,
       phone: regPhone,
       emergencyPhone: regEmergencyPhone,
@@ -301,9 +345,9 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     };
 
     const updatedUsers = [...users, newUser];
-    localStorage.setItem('warga_users', JSON.stringify(updatedUsers));
-    localStorage.setItem('warga_authenticated', 'true');
-    localStorage.setItem('warga_current_user', JSON.stringify(newUser));
+    localStorage.setItem("warga_users", JSON.stringify(updatedUsers));
+    localStorage.setItem("warga_authenticated", "true");
+    localStorage.setItem("warga_current_user", JSON.stringify(newUser));
     onLoginSuccess();
   };
 
@@ -311,37 +355,42 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     <div className="flex-1 flex flex-col justify-between h-full py-2 overflow-y-auto">
       {/* Upper Section */}
       <div className="space-y-5 my-auto">
-        
         {/* Header Logo & Title side-by-side or centered */}
-        {view === 'login' ? (
+        {view === "login" ? (
           <div className="space-y-4">
             <div className="flex justify-center">
-              <img 
-                src="/img/icon.png" 
-                alt="SI AMAN AI Logo" 
+              <img
+                src="/img/icon.png"
+                alt="SI AMAN AI Logo"
                 className="w-24 h-24 object-contain"
               />
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Masuk</h2>
-              <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[275px] mx-auto">
-                Jika ingin masuk kedalam sistem kami bisa masukkan E-mail dan password yang telah di daftarkan.
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                Masuk
+              </h2>
+              <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-68.75 mx-auto">
+                Jika ingin masuk kedalam sistem kami bisa masukkan E-mail dan
+                password yang telah di daftarkan.
               </p>
             </div>
           </div>
-        ) : view === 'register' ? (
+        ) : view === "register" ? (
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3.5">
-              <img 
-                src="/img/icon.png" 
-                alt="SI AMAN AI Logo" 
+              <img
+                src="/img/icon.png"
+                alt="SI AMAN AI Logo"
                 className="w-16 h-16 object-contain"
               />
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Daftar</h2>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                Daftar
+              </h2>
             </div>
             <div className="text-center">
-              <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[280px] mx-auto">
-                Silahkan daftarkan akun anda untuk menikmati fasilitas dengan mengisi beberapa formulir yang kami sediakan
+              <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-70 mx-auto">
+                Silahkan daftarkan akun anda untuk menikmati fasilitas dengan
+                mengisi beberapa formulir yang kami sediakan
               </p>
             </div>
           </div>
@@ -349,16 +398,19 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
           /* complete_google_data view: Register-User-Uncompleted header style */
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3.5">
-              <img 
-                src="/img/icon.png" 
-                alt="SI AMAN AI Logo" 
+              <img
+                src="/img/icon.png"
+                alt="SI AMAN AI Logo"
                 className="w-16 h-16 object-contain"
               />
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Daftar</h2>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                Daftar
+              </h2>
             </div>
             <div className="text-center">
-              <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[280px] mx-auto">
-                Silahkan lengkapi akun anda untuk menikmati fasilitas dengan mengisi beberapa formulir yang kami sediakan
+              <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-70 mx-auto">
+                Silahkan lengkapi akun anda untuk menikmati fasilitas dengan
+                mengisi beberapa formulir yang kami sediakan
               </p>
             </div>
           </div>
@@ -371,9 +423,8 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         )}
 
         {/* Forms layout */}
-        {view === 'login' ? (
+        {view === "login" ? (
           <form onSubmit={handleLogin} className="space-y-3.5">
-            
             {/* E-mail input */}
             <div className="relative flex items-center">
               <Mail className="absolute left-4 w-4 h-4 text-slate-500" />
@@ -391,7 +442,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             <div className="relative flex items-center">
               <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -403,7 +454,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 text-slate-400 hover:text-slate-600"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -411,7 +466,9 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             <div className="text-right">
               <button
                 type="button"
-                onClick={() => alert('Fitur pemulihan kata sandi sedang dalam pengembangan.')}
+                onClick={() =>
+                  alert("Fitur pemulihan kata sandi sedang dalam pengembangan.")
+                }
                 className="text-[10px] font-bold text-[#114B5F] hover:underline"
               >
                 Lupa Password?
@@ -428,11 +485,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
 
             {/* Divider */}
             <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="flex-shrink mx-4 text-[9px] font-bold bg-slate-100 text-slate-400 py-1 px-2.5 rounded-md uppercase">
+              <div className="grow border-t border-slate-200"></div>
+              <span className="shrink mx-4 text-[9px] font-bold bg-slate-100 text-slate-400 py-1 px-2.5 rounded-md uppercase">
                 Metode Lain
               </span>
-              <div className="flex-grow border-t border-slate-200"></div>
+              <div className="grow border-t border-slate-200"></div>
             </div>
 
             {/* Google Sign-in */}
@@ -461,12 +518,10 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
               </svg>
               <span>Masuk dengan Akun Google</span>
             </button>
-
           </form>
-        ) : view === 'register' ? (
+        ) : view === "register" ? (
           /* Register Form matching mockup elements */
           <form onSubmit={handleRegister} className="space-y-3">
-            
             {/* Nama Lengkap */}
             <div className="relative flex items-center">
               <User className="absolute left-4 w-4 h-4 text-slate-500" />
@@ -497,7 +552,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             <div className="relative flex items-center">
               <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
@@ -509,7 +564,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 text-slate-400 hover:text-slate-600"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -517,7 +576,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             <div className="relative flex items-center">
               <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 value={regConfirmPassword}
                 onChange={(e) => setRegConfirmPassword(e.target.value)}
@@ -529,7 +588,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-4 text-slate-400 hover:text-slate-600"
               >
-                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -584,7 +647,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 onClick={handleAcquireGPS}
                 className="absolute right-2 px-2.5 py-1 bg-[#114B5F] hover:bg-[#0e3b4b] text-white text-[9px] font-bold rounded-lg transition-colors"
               >
-                {gpsLoading ? 'Melacak...' : 'Ambil GPS'}
+                {gpsLoading ? "Melacak..." : "Ambil GPS"}
               </button>
             </div>
 
@@ -598,11 +661,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
 
             {/* Divider */}
             <div className="relative flex py-1.5 items-center">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="flex-shrink mx-4 text-[9px] font-bold bg-slate-100 text-slate-400 py-1 px-2.5 rounded-md uppercase">
+              <div className="grow border-t border-slate-200"></div>
+              <span className="shrink mx-4 text-[9px] font-bold bg-slate-100 text-slate-400 py-1 px-2.5 rounded-md uppercase">
                 Daftar Metode Lain
               </span>
-              <div className="flex-grow border-t border-slate-200"></div>
+              <div className="grow border-t border-slate-200"></div>
             </div>
 
             {/* Google Sign-up */}
@@ -631,17 +694,15 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
               </svg>
               <span>Daftar dengan Akun Google</span>
             </button>
-
           </form>
         ) : (
           /* complete_google_data view: Register-User-Uncompleted form layout */
           <form onSubmit={handleRegister} className="space-y-4">
-            
             {/* Kata Sandi */}
             <div className="relative flex items-center">
               <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
@@ -653,7 +714,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 text-slate-400 hover:text-slate-600"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -661,7 +726,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             <div className="relative flex items-center">
               <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 value={regConfirmPassword}
                 onChange={(e) => setRegConfirmPassword(e.target.value)}
@@ -673,7 +738,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-4 text-slate-400 hover:text-slate-600"
               >
-                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
 
@@ -708,31 +777,39 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             >
               Kirim
             </button>
-
           </form>
         )}
       </div>
 
       {/* Bottom Switch Tab Section */}
-      {view !== 'complete_google_data' && (
+      {view !== "complete_google_data" && (
         <div className="text-center pt-5 mt-auto">
           <button
             type="button"
             onClick={() => {
-              setView(view === 'login' ? 'register' : 'login');
+              setView(view === "login" ? "register" : "login");
               setErrorMsg(null);
             }}
             className="text-xs text-slate-500 font-medium"
           >
-            {view === 'login' ? (
-              <span>Tidak Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Daftar</strong></span>
+            {view === "login" ? (
+              <span>
+                Tidak Memiliki Akun?{" "}
+                <strong className="text-[#114B5F] hover:underline">
+                  Daftar
+                </strong>
+              </span>
             ) : (
-              <span>Sudah Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Masuk</strong></span>
+              <span>
+                Sudah Memiliki Akun?{" "}
+                <strong className="text-[#114B5F] hover:underline">
+                  Masuk
+                </strong>
+              </span>
             )}
           </button>
         </div>
       )}
-
     </div>
   );
 }

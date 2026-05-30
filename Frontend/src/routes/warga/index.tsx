@@ -1,10 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useForm } from '@tanstack/react-form';
-import { z } from 'zod';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect, useRef } from 'react';
 import { useSafetyRoutes } from '../../use-cases/hooks/useSafetyRoutes';
 import type { RouteRequestInput } from '../../domain/entities/route';
-import { Navigation, MapPin, Compass, Award, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Compass, Award, AlertTriangle, Search, Bell, Plus, Settings, MapPin, Navigation } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -28,11 +26,6 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 export const Route = createFileRoute('/warga/')({
   component: WargaDashboard,
-});
-
-const routeSearchSchema = z.object({
-  startAddress: z.string().min(3, 'Lokasi awal minimal 3 karakter'),
-  destinationAddress: z.string().min(3, 'Lokasi tujuan minimal 3 karakter'),
 });
 
 // Nominatim Geocoding function
@@ -60,6 +53,8 @@ const geocodeAddress = async (query: string): Promise<[number, number] | null> =
 };
 
 function WargaDashboard() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const [routeParams, setRouteParams] = useState<RouteRequestInput | null>(null);
   const [geocodingLoading, setGeocodingLoading] = useState(false);
 
@@ -76,13 +71,29 @@ function WargaDashboard() {
 
     const map = L.map(mapRef.current, {
       zoomControl: false,
-    }).setView([-7.6167, 111.6500], 11);
+    }).setView([-7.6167, 111.6500], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map);
 
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    // Setup green dot GPS marker matching wireframe design
+    const greenDotIcon = L.divIcon({
+      className: 'custom-gps-dot',
+      html: `
+        <div class="relative flex items-center justify-center w-6 h-6">
+          <div class="absolute w-6 h-6 bg-emerald-500/35 rounded-full animate-ping" style="animation-duration: 2s;"></div>
+          <div class="relative w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+        </div>
+      `,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    });
+
+    L.marker([-7.6167, 111.6500], { icon: greenDotIcon })
+      .addTo(map)
+      .bindPopup('Lokasi Anda Saat Ini')
+      .openPopup();
 
     mapInstanceRef.current = map;
 
@@ -109,13 +120,13 @@ function WargaDashboard() {
       // Add start marker
       startMarkerRef.current = L.marker([routeParams.startLat, routeParams.startLng])
         .addTo(map)
-        .bindPopup('Titik Mulai')
-        .openPopup();
+        .bindPopup('Titik Mulai');
 
       // Add end marker
       endMarkerRef.current = L.marker([routeParams.endLat, routeParams.endLng])
         .addTo(map)
-        .bindPopup('Tujuan');
+        .bindPopup('Tujuan')
+        .openPopup();
 
       // Adjust map view
       const bounds = L.latLngBounds(
@@ -144,226 +155,153 @@ function WargaDashboard() {
     }
   }, [routeParams, routes]);
 
-  // TanStack Form setup
-  const form = useForm({
-    defaultValues: {
-      startAddress: '',
-      destinationAddress: '',
-    },
-    onSubmit: async ({ value }) => {
-      setGeocodingLoading(true);
-      try {
-        const startCoord = await geocodeAddress(value.startAddress);
-        const endCoord = await geocodeAddress(value.destinationAddress);
+  // Handle Search Submission
+  const handleSearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
 
-        if (startCoord && endCoord) {
-          setRouteParams({
-            startLat: startCoord[0],
-            startLng: startCoord[1],
-            endLat: endCoord[0],
-            endLng: endCoord[1],
-          });
-        } else {
-          alert('Lokasi asal atau tujuan tidak ditemukan di Madiun. Coba tulis lebih spesifik (misal: "Alun-Alun Madiun" atau "Caruban").');
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setGeocodingLoading(false);
-      }
-    },
-  });
+    setGeocodingLoading(true);
+    const destCoords = await geocodeAddress(searchQuery);
+    if (destCoords) {
+      setRouteParams({
+        startLat: -7.6167, // User's green dot position
+        startLng: 111.6500,
+        endLat: destCoords[0],
+        endLng: destCoords[1],
+      });
+    } else {
+      alert('Lokasi tidak ditemukan di Madiun. Coba tulis lebih spesifik (misal: "Caruban" atau "Mejayan").');
+    }
+    setGeocodingLoading(false);
+  };
+
+  // Recenter GPS
+  const handleRecenter = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([-7.6167, 111.6500], 14, { animate: true });
+    }
+  };
 
   return (
-    <div className="flex flex-col flex-1 p-4 space-y-4 animate-fade-in">
-      {/* Route Search Form Panel */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 space-y-3">
-        <div className="flex items-center gap-2 mb-1">
-          <Compass className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm">Cari Rute Aman Anda</h3>
-        </div>
+    <div className="relative w-full h-full flex flex-col overflow-hidden">
+      
+      {/* Full-screen Map Container */}
+      <div ref={mapRef} className="w-full h-full z-0 absolute inset-0" />
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            form.handleSubmit();
-          }}
-          className="space-y-3"
-        >
-          {/* Start Location Input */}
-          <form.Field
-            name="startAddress"
-            validators={{
-              onChange: routeSearchSchema.shape.startAddress,
-            }}
-          >
-            {(field) => (
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                <input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Lokasi Awal (misal: Alun-Alun Madiun)"
-                  className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100"
-                />
-                {field.state.meta.errors && (
-                  <span className="text-[10px] text-red-500 mt-1 block px-2">
-                    {field.state.meta.errors.join(', ')}
-                  </span>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-          {/* End Location Input */}
-          <form.Field
-            name="destinationAddress"
-            validators={{
-              onChange: routeSearchSchema.shape.destinationAddress,
-            }}
-          >
-            {(field) => (
-              <div className="relative">
-                <Navigation className="absolute left-3 top-3 w-4 h-4 text-emerald-500 rotate-45" />
-                <input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Lokasi Tujuan (misal: Caruban Madiun)"
-                  className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-100"
-                />
-                {field.state.meta.errors && (
-                  <span className="text-[10px] text-red-500 mt-1 block px-2">
-                    {field.state.meta.errors.join(', ')}
-                  </span>
-                )}
-              </div>
-            )}
-          </form.Field>
-
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <button
-                type="submit"
-                disabled={!canSubmit || isSubmitting || geocodingLoading}
-                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/10 hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
-              >
-                {isSubmitting || geocodingLoading ? 'Menganalisis Rute...' : 'Analisis Rute Aman'}
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-          </form.Subscribe>
+      {/* Floating Header: Search & Notification Bell */}
+      <div className="absolute top-4 left-4 right-4 z-[1000] flex items-center gap-3">
+        {/* Search Input Box */}
+        <form onSubmit={handleSearchSubmit} className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2.5 flex items-center gap-2 shadow-sm">
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari Lokasi Tujuan"
+            className="w-full text-xs text-slate-700 bg-transparent outline-none placeholder-slate-400"
+          />
         </form>
-      </div>
 
-      {/* Map Display Panel */}
-      <div className="relative h-72 bg-slate-200 dark:bg-slate-800 rounded-3xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-700 z-10">
-        <div ref={mapRef} className="w-full h-full" style={{ minHeight: '100%' }} />
-        
-        {geocodingLoading && (
-          <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm z-[1000] flex flex-col justify-center items-center text-white space-y-2">
-            <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-bold tracking-wide">Mencari koordinat di Madiun...</span>
-          </div>
-        )}
-
-        {!routeParams && !geocodingLoading && (
-          <div className="absolute inset-0 bg-slate-950/10 pointer-events-none z-[400] flex flex-col justify-center items-center text-slate-500">
-            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold shadow-lg text-slate-700 dark:text-slate-200">
-              Isi asal & tujuan untuk memulai navigasi
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Routing Results & AI Recommendation Panel */}
-      {isLoading && (
-        <div className="space-y-3">
-          <div className="h-6 w-1/3 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
-          <div className="h-28 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
-        </div>
-      )}
-
-      {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 rounded-2xl border border-red-200 dark:border-red-900 text-xs">
-          Gagal mengambil rekomendasi rute: {error.message}
-        </div>
-      )}
-
-      {routes && routes.map((route) => (
-        <div
-          key={route.id}
-          className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 space-y-4 animate-fade-in-up"
+        {/* Bell Button with badge 5 */}
+        <button
+          type="button"
+          onClick={() => alert('Anda memiliki 5 pemberitahuan keamanan baru di sekitar Madiun.')}
+          className="relative w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-600 active:scale-95 transition-transform shrink-0"
         >
-          {/* Header */}
+          <Bell className="w-4.5 h-4.5" />
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white">
+            5
+          </span>
+        </button>
+      </div>
+
+      {/* Geocoding Loading Indicator Overlay */}
+      {geocodingLoading && (
+        <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm z-[1000] flex flex-col justify-center items-center text-white space-y-2">
+          <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-bold">Menganalisis lokasi...</span>
+        </div>
+      )}
+
+      {/* Route Details Sliding Drawer overlay */}
+      {routes && routes.length > 0 && !geocodingLoading && (
+        <div className="absolute bottom-24 left-4 right-4 z-[1000] bg-white border border-slate-200 p-4 rounded-2xl shadow-lg space-y-3 animate-fade-in-up">
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+              <span className="text-[9px] uppercase font-extrabold text-[#114B5F] tracking-wider block">
                 Rute Rekomendasi Teratas
               </span>
-              <h4 className="font-bold text-slate-800 dark:text-slate-100 text-base">{route.name}</h4>
+              <h4 className="font-extrabold text-slate-800 text-sm">{routes[0].name}</h4>
             </div>
-            <div className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-              route.safetyLevel === 'safe'
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400'
-                : route.safetyLevel === 'warning'
-                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400'
-                : 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-400'
-            }`}>
-              <Award className="w-3.5 h-3.5" />
-              <span>Skor {route.safetyScore}/100</span>
+            <button
+              onClick={() => {
+                setRouteParams(null);
+                setSearchQuery('');
+              }}
+              className="text-slate-400 hover:text-slate-600 text-[10px] font-bold bg-slate-50 hover:bg-slate-100 px-2 py-1 rounded-lg border border-slate-200"
+            >
+              Clear
+            </button>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-3 gap-2 py-1.5 px-3 bg-slate-50 rounded-xl text-center border border-slate-100">
+            <div>
+              <span className="text-[9px] text-slate-400 block font-medium">Jarak</span>
+              <span className="text-xs font-extrabold text-slate-800">{routes[0].distanceKm} Km</span>
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-400 block font-medium">Waktu</span>
+              <span className="text-xs font-extrabold text-slate-800">{routes[0].durationMinutes} Min</span>
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-400 block font-medium">Laporan Aktif</span>
+              <span className="text-xs font-extrabold text-red-600">{routes[0].hazardCount} Aduan</span>
             </div>
           </div>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-3 gap-2 py-2 px-3 bg-slate-50 dark:bg-slate-950 rounded-xl text-center">
-            <div>
-              <span className="text-[9px] text-slate-400 block">Jarak</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{route.distanceKm} Km</span>
-            </div>
-            <div>
-              <span className="text-[9px] text-slate-400 block">Waktu</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{route.durationMinutes} Menit</span>
-            </div>
-            <div>
-              <span className="text-[9px] text-slate-400 block">Laporan Aktif</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{route.hazardCount} Kejadian</span>
-            </div>
-          </div>
-
-          {/* AI Recommendation Explanation */}
-          <div className="bg-emerald-500/5 p-3 rounded-xl border border-emerald-500/10 text-xs">
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 block mb-1">💡 Rekomendasi AI SI AMAN:</span>
-            <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{route.aiRecommendation}</p>
-          </div>
-
-          {/* Safety Factors Details */}
-          <div className="space-y-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Faktor Pendukung:</span>
-            <div className="space-y-1.5">
-              {route.safetyFactors.map((factor, idx) => (
-                <div key={idx} className="flex gap-2 items-start text-xs">
-                  {factor.type === 'positive' ? (
-                    <Award className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  )}
-                  <div>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 block">{factor.factor}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">{factor.description}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* AI Safety Recommendation */}
+          <div className="bg-teal-50 p-2.5 rounded-xl border border-teal-100 text-[11px] leading-relaxed text-[#114B5F] font-semibold">
+            <span className="font-bold text-teal-800 block mb-0.5">💡 Rekomendasi AI:</span>
+            {routes[0].aiRecommendation}
           </div>
         </div>
-      ))}
+      )}
+
+      {/* Floating Bottom Navigation Bar */}
+      <div className="absolute bottom-6 left-4 right-4 z-[1000] bg-white border border-slate-200 rounded-2xl py-3.5 px-6 flex justify-between items-center shadow-md">
+        
+        {/* Left: Compass / Recenter */}
+        <button
+          type="button"
+          onClick={handleRecenter}
+          className="text-[#114B5F] hover:text-[#0e3b4b] active:scale-95 transition-transform"
+          title="Recenter Map"
+        >
+          <Compass className="w-5.5 h-5.5" />
+        </button>
+
+        {/* Center: Floating Circle Plus Action Button */}
+        <button
+          type="button"
+          onClick={() => navigate({ to: '/warga/report-safety' })}
+          className="w-14 h-14 bg-[#114B5F] hover:bg-[#0e3b4b] text-white rounded-full flex items-center justify-center -translate-y-7 border-4 border-white shadow-lg active:scale-95 transition-transform shrink-0"
+          title="Lapor Kerawanan Baru"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+
+        {/* Right: Settings cog */}
+        <button
+          type="button"
+          onClick={() => alert('Menu pengaturan peta sedang dalam pengembangan.')}
+          className="text-slate-400 hover:text-slate-600 active:scale-95 transition-transform"
+          title="Settings"
+        >
+          <Settings className="w-5.5 h-5.5" />
+        </button>
+      </div>
+
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: GettingStartedPage,
 });
 
@@ -9,25 +9,25 @@ function GettingStartedPage() {
     <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen">
       {/* Mobile-first constraints frame */}
       <div className="w-full max-w-md min-h-screen bg-white border-x border-slate-200 flex flex-col overflow-hidden">
-        
         {/* Full width top image asset */}
         <div className="w-full">
-          <img 
-            src="/img/getting-started.png" 
-            alt="Getting Started" 
-            className="w-full object-cover aspect-[4/3] sm:aspect-auto"
+          <img
+            src="/img/getting-started.png"
+            alt="Getting Started"
+            className="w-full object-cover aspect-4/3 sm:aspect-auto"
           />
         </div>
 
         {/* Text & Button content section */}
         <div className="flex-1 bg-white px-8 py-8 flex flex-col justify-between text-center">
-          
           <div className="my-auto space-y-4">
             <h2 className="text-xl font-bold text-slate-900 leading-tight">
               Langkah Pertama menuju perjalanan aman dan nyaman
             </h2>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Si Aman AI memetakan keamanan Madiun secara real-time dari laporan Anda. Temukan rute teraman, bukan sekadar tercepat, dengan kekuatan AI dan komunitas
+              Si Aman AI memetakan keamanan Madiun secara real-time dari laporan
+              Anda. Temukan rute teraman, bukan sekadar tercepat, dengan
+              kekuatan AI dan komunitas
             </p>
           </div>
 
@@ -39,9 +39,7 @@ function GettingStartedPage() {
               Mulai
             </Link>
           </div>
-
         </div>
-
       </div>
     </div>
   );
