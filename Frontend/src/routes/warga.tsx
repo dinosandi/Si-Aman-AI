@@ -205,8 +205,22 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     }
   };
 
-  // Trigger Google onboarding view
-  const handleGoogleAuth = () => {
+  // Handle direct Google Login
+  const handleGoogleLogin = () => {
+    localStorage.setItem('warga_authenticated', 'true');
+    localStorage.setItem('warga_current_user', JSON.stringify({ 
+      email: 'google.user@gmail.com', 
+      name: 'Google Warga Madiun',
+      phone: '081234567890',
+      emergencyPhone: '081234567899',
+      address: 'Madiun Kota',
+      latLong: '-7.616700, 111.650000'
+    }));
+    onLoginSuccess();
+  };
+
+  // Trigger Google onboarding view for Register
+  const handleGoogleRegister = () => {
     setRegEmail('google.user@gmail.com');
     setRegName('Google Warga Madiun');
     setView('complete_google_data');
@@ -424,7 +438,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             {/* Google Sign-in */}
             <button
               type="button"
-              onClick={handleGoogleAuth}
+              onClick={handleGoogleLogin}
               className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-slate-500 font-bold text-xs transition-colors flex items-center justify-center"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -594,7 +608,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             {/* Google Sign-up */}
             <button
               type="button"
-              onClick={handleGoogleAuth}
+              onClick={handleGoogleRegister}
               className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-slate-500 font-bold text-xs transition-colors flex items-center justify-center"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
