@@ -158,7 +158,7 @@ function WargaLayout() {
 
 // Subcomponent: Citizen Login & Registration Forms
 function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
-  const [view, setView] = useState<'login' | 'register'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'complete_google_data'>('login');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   // Password visibility states
@@ -205,6 +205,13 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     }
   };
 
+  // Trigger Google onboarding view
+  const handleGoogleAuth = () => {
+    setRegEmail('google.user@gmail.com');
+    setRegName('Google Warga Madiun');
+    setView('complete_google_data');
+  };
+
   // Handle automatic geolocation for Lat, Long
   const handleAcquireGPS = () => {
     setGpsLoading(true);
@@ -235,9 +242,16 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!regName || !regEmail || !regPassword || !regConfirmPassword) {
-      setErrorMsg('Harap lengkapi kolom nama, email, dan sandi wajib.');
-      return;
+    if (view === 'complete_google_data') {
+      if (!regPassword || !regConfirmPassword) {
+        setErrorMsg('Harap lengkapi kolom kata sandi wajib.');
+        return;
+      }
+    } else {
+      if (!regName || !regEmail || !regPassword || !regConfirmPassword) {
+        setErrorMsg('Harap lengkapi kolom nama, email, dan sandi wajib.');
+        return;
+      }
     }
 
     if (regPassword !== regConfirmPassword) {
@@ -250,18 +264,21 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
       ? JSON.parse(storedUsers)
       : [{ email: 'warga@siaman.id', password: 'password123', name: 'Warga Madiun' }];
 
-    const userExists = users.some(
-      (u: any) => u.email.toLowerCase() === regEmail.toLowerCase().trim()
-    );
+    // If it's standard registration, make sure email doesn't exist
+    if (view !== 'complete_google_data') {
+      const userExists = users.some(
+        (u: any) => u.email.toLowerCase() === regEmail.toLowerCase().trim()
+      );
 
-    if (userExists) {
-      setErrorMsg('Email sudah terdaftar di sistem.');
-      return;
+      if (userExists) {
+        setErrorMsg('Email sudah terdaftar di sistem.');
+        return;
+      }
     }
 
     const newUser = {
-      name: regName,
-      email: regEmail.trim(),
+      name: regName || 'Google Warga Madiun',
+      email: regEmail.trim() || 'google.user@gmail.com',
       password: regPassword,
       phone: regPhone,
       emergencyPhone: regEmergencyPhone,
@@ -298,7 +315,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
               </p>
             </div>
           </div>
-        ) : (
+        ) : view === 'register' ? (
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3.5">
               <img 
@@ -311,6 +328,23 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             <div className="text-center">
               <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[280px] mx-auto">
                 Silahkan daftarkan akun anda untuk menikmati fasilitas dengan mengisi beberapa formulir yang kami sediakan
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* complete_google_data view: Register-User-Uncompleted header style */
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-3.5">
+              <img 
+                src="/img/icon.png" 
+                alt="SI AMAN AI Logo" 
+                className="w-16 h-16 object-contain"
+              />
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Daftar</h2>
+            </div>
+            <div className="text-center">
+              <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[280px] mx-auto">
+                Silahkan lengkapi akun anda untuk menikmati fasilitas dengan mengisi beberapa formulir yang kami sediakan
               </p>
             </div>
           </div>
@@ -390,11 +424,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             {/* Google Sign-in */}
             <button
               type="button"
-              onClick={() => {
-                localStorage.setItem('warga_authenticated', 'true');
-                localStorage.setItem('warga_current_user', JSON.stringify({ email: 'google.user@gmail.com', name: 'Google Warga Madiun' }));
-                onLoginSuccess();
-              }}
+              onClick={handleGoogleAuth}
               className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-slate-500 font-bold text-xs transition-colors flex items-center justify-center"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -419,7 +449,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             </button>
 
           </form>
-        ) : (
+        ) : view === 'register' ? (
           /* Register Form matching mockup elements */
           <form onSubmit={handleRegister} className="space-y-3">
             
@@ -564,11 +594,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             {/* Google Sign-up */}
             <button
               type="button"
-              onClick={() => {
-                localStorage.setItem('warga_authenticated', 'true');
-                localStorage.setItem('warga_current_user', JSON.stringify({ email: 'google.user@gmail.com', name: 'Google Warga Madiun' }));
-                onLoginSuccess();
-              }}
+              onClick={handleGoogleAuth}
               className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-slate-500 font-bold text-xs transition-colors flex items-center justify-center"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
@@ -593,26 +619,105 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             </button>
 
           </form>
+        ) : (
+          /* complete_google_data view: Register-User-Uncompleted form layout */
+          <form onSubmit={handleRegister} className="space-y-4">
+            
+            {/* Kata Sandi */}
+            <div className="relative flex items-center">
+              <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={regPassword}
+                onChange={(e) => setRegPassword(e.target.value)}
+                placeholder="Kata Sandi"
+                className="w-full text-xs py-3 pl-11 pr-11 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Konfirmasi Kata Sandi */}
+            <div className="relative flex items-center">
+              <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={regConfirmPassword}
+                onChange={(e) => setRegConfirmPassword(e.target.value)}
+                placeholder="Konfirmasi Kata Sandi"
+                className="w-full text-xs py-3 pl-11 pr-11 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-4 text-slate-400 hover:text-slate-600"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* No Telepon */}
+            <div className="relative flex items-center">
+              <Phone className="absolute left-4 w-4 h-4 text-slate-500" />
+              <input
+                type="tel"
+                value={regPhone}
+                onChange={(e) => setRegPhone(e.target.value)}
+                placeholder="No Telepon"
+                className="w-full text-xs py-3 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
+              />
+            </div>
+
+            {/* Nomor Telepon Darurat */}
+            <div className="relative flex items-center">
+              <Phone className="absolute left-4 w-4 h-4 text-slate-500" />
+              <input
+                type="tel"
+                value={regEmergencyPhone}
+                onChange={(e) => setRegEmergencyPhone(e.target.value)}
+                placeholder="Nomor Telepon Darurat"
+                className="w-full text-xs py-3 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
+              />
+            </div>
+
+            {/* Kirim Button */}
+            <button
+              type="submit"
+              className="w-full py-3.5 bg-[#114B5F] hover:bg-[#0e3b4b] text-white font-bold text-xs rounded-xl transition-colors tracking-wide"
+            >
+              Kirim
+            </button>
+
+          </form>
         )}
       </div>
 
       {/* Bottom Switch Tab Section */}
-      <div className="text-center pt-5 mt-auto">
-        <button
-          type="button"
-          onClick={() => {
-            setView(view === 'login' ? 'register' : 'login');
-            setErrorMsg(null);
-          }}
-          className="text-xs text-slate-500 font-medium"
-        >
-          {view === 'login' ? (
-            <span>Tidak Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Daftar</strong></span>
-          ) : (
-            <span>Sudah Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Masuk</strong></span>
-          )}
-        </button>
-      </div>
+      {view !== 'complete_google_data' && (
+        <div className="text-center pt-5 mt-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setView(view === 'login' ? 'register' : 'login');
+              setErrorMsg(null);
+            }}
+            className="text-xs text-slate-500 font-medium"
+          >
+            {view === 'login' ? (
+              <span>Tidak Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Daftar</strong></span>
+            ) : (
+              <span>Sudah Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Masuk</strong></span>
+            )}
+          </button>
+        </div>
+      )}
 
     </div>
   );
