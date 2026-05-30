@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useLocation } from '@tanstack/react-router';
-import { Home, ShieldAlert, FileText, Wifi, WifiOff, LogOut, Shield, User, Lock, Phone } from 'lucide-react';
+import { Home, ShieldAlert, FileText, Wifi, WifiOff, LogOut, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSyncOfflineReports } from '../use-cases/hooks/useReports';
 
@@ -49,33 +49,14 @@ function WargaLayout() {
     return false;
   };
 
-  // If not logged in, render the Auth Page inside the mobile frame
+  // If not logged in, render the login page in full mobile frame
   if (!isAuthenticated) {
     return (
-      <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 p-6 flex flex-col space-y-6">
+      <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen">
+        <div className="w-full max-w-md min-h-screen bg-white border-x border-slate-200 p-6 flex flex-col justify-between overflow-hidden">
           
-          {/* Logo Branding */}
-          <div className="text-center space-y-2">
-            <div className="bg-emerald-50 text-emerald-600 p-3 rounded-2xl border border-emerald-100 inline-block">
-              <Shield className="w-8 h-8" />
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">SI AMAN Portal Warga</h2>
-            <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
-              Masuk atau daftar untuk memantau rute teraman dan mengirimkan laporan kerawanan wilayah Kabupaten Madiun.
-            </p>
-          </div>
-
           <WargaAuthForm onLoginSuccess={() => setIsAuthenticated(true)} />
-
-          <div className="text-center">
-            <Link
-              to="/"
-              className="text-[10px] text-slate-400 hover:text-slate-600 underline font-bold"
-            >
-              Kembali ke Landing Page
-            </Link>
-          </div>
+          
         </div>
       </div>
     );
@@ -87,10 +68,10 @@ function WargaLayout() {
       <div className="w-full max-w-md min-h-screen bg-white relative flex flex-col border-x border-slate-200">
         
         {/* Citizen Top Bar */}
-        <header className="sticky top-0 z-50 bg-emerald-600 text-white px-4 py-3 flex justify-between items-center border-b border-emerald-700">
+        <header className="sticky top-0 z-50 bg-[#114B5F] text-white px-4 py-3 flex justify-between items-center border-b border-[#0d3b4b]">
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-sm tracking-wide">SI AMAN Warga</span>
-            <span className="bg-emerald-500 text-[8px] uppercase font-extrabold px-1.5 py-0.5 rounded border border-emerald-400">
+            <span className="bg-emerald-500/20 text-[8px] uppercase font-extrabold px-1.5 py-0.5 rounded border border-emerald-400/30">
               PWA
             </span>
           </div>
@@ -111,7 +92,7 @@ function WargaLayout() {
             <button
               onClick={handleLogout}
               title="Logout"
-              className="p-1 bg-emerald-700 hover:bg-emerald-800 rounded transition-colors text-white"
+              className="p-1 bg-[#0d3b4b] hover:bg-[#092934] rounded transition-colors text-white"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -136,7 +117,7 @@ function WargaLayout() {
             to="/warga"
             className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
               isActive('/warga') && location.pathname === '/warga'
-                ? 'text-emerald-600 font-extrabold'
+                ? 'text-[#114B5F] font-extrabold'
                 : 'text-slate-400 hover:text-slate-600'
             }`}
           >
@@ -161,7 +142,7 @@ function WargaLayout() {
             to="/warga/report-safety"
             className={`flex flex-col items-center gap-0.5 py-1 px-3 transition-colors ${
               isActive('/warga/report-safety')
-                ? 'text-emerald-600 font-extrabold'
+                ? 'text-[#114B5F] font-extrabold'
                 : 'text-slate-400 hover:text-slate-600'
             }`}
           >
@@ -177,16 +158,16 @@ function WargaLayout() {
 
 // Subcomponent: Citizen Login & Registration Forms
 function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [view, setView] = useState<'login' | 'register'>('login');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Form states
-  const [loginUsername, setLoginUsername] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const [regName, setRegName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regUsername, setRegUsername] = useState('');
+  const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
 
   // Handle mock login
@@ -197,10 +178,10 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     const storedUsers = localStorage.getItem('warga_users');
     const users = storedUsers
       ? JSON.parse(storedUsers)
-      : [{ username: 'warga', password: 'password123', name: 'Warga Madiun' }];
+      : [{ email: 'warga@siaman.id', password: 'password123', name: 'Warga Madiun' }];
 
     const user = users.find(
-      (u: any) => u.username.toLowerCase() === loginUsername.toLowerCase().trim() && u.password === loginPassword
+      (u: any) => u.email.toLowerCase() === email.toLowerCase().trim() && u.password === password
     );
 
     if (user) {
@@ -208,7 +189,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
       localStorage.setItem('warga_current_user', JSON.stringify(user));
       onLoginSuccess();
     } else {
-      setErrorMsg('Username atau password salah. (Gunakan: warga / password123)');
+      setErrorMsg('Email atau kata sandi salah. (Gunakan: warga@siaman.id / password123)');
     }
   };
 
@@ -217,28 +198,29 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!regUsername || !regPassword || !regName) {
+    if (!regName || !regEmail || !regPassword) {
       setErrorMsg('Harap lengkapi semua kolom yang wajib diisi.');
       return;
     }
 
     const storedUsers = localStorage.getItem('warga_users');
-    const users = storedUsers ? JSON.parse(storedUsers) : [{ username: 'warga', password: 'password123', name: 'Warga Madiun' }];
+    const users = storedUsers
+      ? JSON.parse(storedUsers)
+      : [{ email: 'warga@siaman.id', password: 'password123', name: 'Warga Madiun' }];
 
     const userExists = users.some(
-      (u: any) => u.username.toLowerCase() === regUsername.toLowerCase().trim()
+      (u: any) => u.email.toLowerCase() === regEmail.toLowerCase().trim()
     );
 
     if (userExists) {
-      setErrorMsg('Username sudah terdaftar.');
+      setErrorMsg('Email sudah terdaftar.');
       return;
     }
 
     const newUser = {
-      username: regUsername.trim(),
-      password: regPassword,
       name: regName,
-      phone: regPhone,
+      email: regEmail.trim(),
+      password: regPassword,
     };
 
     const updatedUsers = [...users, newUser];
@@ -249,155 +231,208 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Tabs Selector */}
-      <div className="flex border border-slate-200 rounded-xl overflow-hidden p-0.5 bg-slate-50">
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('login');
-            setErrorMsg(null);
-          }}
-          className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
-            activeTab === 'login'
-              ? 'bg-white text-emerald-600 border border-slate-200 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Masuk
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setActiveTab('register');
-            setErrorMsg(null);
-          }}
-          className={`flex-1 text-center py-2 text-xs font-bold rounded-lg transition-all ${
-            activeTab === 'register'
-              ? 'bg-white text-emerald-600 border border-slate-200 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Daftar Akun
-        </button>
-      </div>
-
-      {errorMsg && (
-        <div className="text-[10px] text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-xl text-center font-bold">
-          {errorMsg}
+    <div className="flex-1 flex flex-col justify-between h-full py-4">
+      {/* Upper Section */}
+      <div className="space-y-6 my-auto">
+        
+        {/* App Logo Asset centered */}
+        <div className="flex justify-center">
+          <img 
+            src="/img/icon.png" 
+            alt="SI AMAN AI Logo" 
+            className="w-24 h-24 object-contain"
+          />
         </div>
-      )}
 
-      {/* Login Form */}
-      {activeTab === 'login' ? (
-        <form onSubmit={handleLogin} className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 block">Username</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+        {/* Heading text */}
+        <div className="text-center space-y-2 px-2">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            {view === 'login' ? 'Masuk' : 'Daftar'}
+          </h2>
+          <p className="text-[11px] text-slate-400 font-medium leading-relaxed max-w-[270px] mx-auto">
+            {view === 'login' 
+              ? 'Jika ingin masuk kedalam sistem kami bisa masukkan E-mail dan password yang telah di daftarkan.'
+              : 'Daftarkan akun baru Anda untuk menikmati rute navigasi teraman dari tim penyelamat Madiun.'
+            }
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div className="text-[10px] text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-xl text-center font-bold">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Forms layout */}
+        {view === 'login' ? (
+          <form onSubmit={handleLogin} className="space-y-4">
+            
+            {/* E-mail input */}
+            <div className="relative flex items-center">
+              <Mail className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type="text"
+                type="email"
                 required
-                value={loginUsername}
-                onChange={(e) => setLoginUsername(e.target.value)}
-                placeholder="Username Anda (misal: warga)"
-                className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="E-mail"
+                className="w-full text-xs py-3 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
               />
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 block">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+            {/* Password input */}
+            <div className="relative flex items-center">
+              <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="Password Anda (misal: password123)"
-                className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Kata Sandi"
+                className="w-full text-xs py-3 pl-11 pr-11 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            className="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors"
-          >
-            Masuk Portal
-          </button>
-        </form>
-      ) : (
-        /* Register Form */
-        <form onSubmit={handleRegister} className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 block">Nama Lengkap</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+            {/* Lupa password */}
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => alert('Fitur pemulihan kata sandi sedang dalam pengembangan.')}
+                className="text-[10px] font-bold text-[#114B5F] hover:underline"
+              >
+                Lupa Password?
+              </button>
+            </div>
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              className="w-full py-3.5 bg-[#114B5F] hover:bg-[#0e3b4b] text-white font-bold text-xs rounded-xl transition-colors tracking-wide"
+            >
+              Masuk
+            </button>
+
+            {/* Divider */}
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-slate-200"></div>
+              <span className="flex-shrink mx-4 text-[9px] font-bold bg-slate-100 text-slate-400 py-1 px-2.5 rounded-md uppercase">
+                Metode Lain
+              </span>
+              <div className="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            {/* Google Sign-in */}
+            <button
+              type="button"
+              onClick={() => {
+                // Mock Google auth
+                localStorage.setItem('warga_authenticated', 'true');
+                localStorage.setItem('warga_current_user', JSON.stringify({ email: 'google.user@gmail.com', name: 'Google Warga Madiun' }));
+                onLoginSuccess();
+              }}
+              className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-xl text-slate-500 font-bold text-xs transition-colors flex items-center justify-center"
+            >
+              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>Masuk dengan Akun Google</span>
+            </button>
+
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="space-y-4">
+            
+            {/* Full Name input */}
+            <div className="relative flex items-center">
+              <User className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
                 type="text"
                 required
                 value={regName}
                 onChange={(e) => setRegName(e.target.value)}
-                placeholder="Nama Lengkap Anda"
-                className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
+                placeholder="Nama Lengkap"
+                className="w-full text-xs py-3 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
               />
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 block">No. Handphone (Opsional)</label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+            {/* Email input */}
+            <div className="relative flex items-center">
+              <Mail className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
-                type="tel"
-                value={regPhone}
-                onChange={(e) => setRegPhone(e.target.value)}
-                placeholder="No. Handphone Aktif"
-                className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 block">Username Baru</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
+                type="email"
                 required
-                value={regUsername}
-                onChange={(e) => setRegUsername(e.target.value)}
-                placeholder="Buat Username"
-                className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
+                value={regEmail}
+                onChange={(e) => setRegEmail(e.target.value)}
+                placeholder="E-mail"
+                className="w-full text-xs py-3 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
               />
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-500 block">Password Baru</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+            {/* Password input */}
+            <div className="relative flex items-center">
+              <Lock className="absolute left-4 w-4 h-4 text-slate-500" />
               <input
                 type="password"
                 required
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="Buat Password Minimal 6 Karakter"
-                className="w-full text-xs py-2.5 pl-9 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
+                placeholder="Kata Sandi"
+                className="w-full text-xs py-3 pl-11 pr-4 rounded-xl bg-slate-50 border border-slate-100 text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-[#114B5F]"
               />
             </div>
-          </div>
 
-          <button
-            type="submit"
-            className="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-colors"
-          >
-            Daftar & Masuk
-          </button>
-        </form>
-      )}
+            {/* Submit Register button */}
+            <button
+              type="submit"
+              className="w-full py-3.5 bg-[#114B5F] hover:bg-[#0e3b4b] text-white font-bold text-xs rounded-xl transition-colors tracking-wide"
+            >
+              Daftar
+            </button>
+
+          </form>
+        )}
+      </div>
+
+      {/* Bottom Switch Tab Section */}
+      <div className="text-center pt-6 mt-auto">
+        <button
+          type="button"
+          onClick={() => {
+            setView(view === 'login' ? 'register' : 'login');
+            setErrorMsg(null);
+          }}
+          className="text-xs text-slate-500 font-medium"
+        >
+          {view === 'login' ? (
+            <span>Tidak Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Daftar</strong></span>
+          ) : (
+            <span>Sudah Memiliki Akun? <strong className="text-[#114B5F] hover:underline">Masuk</strong></span>
+          )}
+        </button>
+      </div>
+
     </div>
   );
 }
