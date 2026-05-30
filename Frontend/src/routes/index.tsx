@@ -1,144 +1,66 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Shield, Navigation, Database, Eye, ShieldAlert, FileText, CheckCircle } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
-  component: LandingPage,
+  component: GettingStartedPage,
 });
 
-function LandingPage() {
+function GettingStartedPage() {
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 text-slate-800 selection:bg-emerald-500 selection:text-white min-h-screen">
-      {/* Top Navbar */}
-      <header className="bg-white border-b border-slate-200 py-4 px-6 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-emerald-600 p-2 rounded-lg text-white">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-extrabold text-sm tracking-tight text-slate-900">SI AMAN AI</span>
-              <span className="text-[10px] text-slate-400 font-bold tracking-wider block -mt-1 uppercase">Madiun</span>
-            </div>
-          </div>
-          <nav className="flex items-center gap-4">
-            <Link
-              to="/warga"
-              className="text-xs font-bold text-slate-600 hover:text-emerald-600 transition-colors"
-            >
-              Portal Warga
-            </Link>
-            <Link
-              to="/admin"
-              className="text-xs font-bold text-slate-600 hover:text-teal-600 transition-colors"
-            >
-              Portal Admin
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="bg-white border-b border-slate-200 py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <span className="bg-emerald-50 text-emerald-800 text-[10px] font-extrabold tracking-wider uppercase px-3 py-1 rounded-full border border-emerald-200">
-            Sistem Pemetaan Keamanan & Rute Aman Kabupaten Madiun
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-            Navigasi Pintar, Pemetaan Kerawanan, & Tanggap Darurat AI
-          </h1>
-          <p className="text-slate-600 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            Platform mitigasi keamanan wilayah Kabupaten Madiun yang membantu warga menemukan rute perjalanan teraman berbasis analisis kerawanan AI, pelaporan cepat masyarakat, serta koordinasi terpadu antar dinas.
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
-            <Link
-              to="/warga"
-              className="inline-flex justify-center items-center py-2.5 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors"
-            >
-              <Navigation className="w-4 h-4 mr-2" />
-              Masuk Portal Warga (PWA)
-            </Link>
-            <Link
-              to="/admin"
-              className="inline-flex justify-center items-center py-2.5 px-6 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition-colors"
-            >
-              <Database className="w-4 h-4 mr-2" />
-              Masuk Portal Admin
-            </Link>
+    <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen">
+      {/* Mobile-first constraints frame */}
+      <div className="w-full max-w-md min-h-screen bg-white border-x border-slate-200 flex flex-col justify-between p-6">
+        
+        {/* Top Branding Section */}
+        <div className="flex items-center gap-2.5 justify-center mt-4">
+          <img 
+            src="/img/icon.png" 
+            alt="SI AMAN AI Logo" 
+            className="w-9 h-9 object-contain"
+          />
+          <div>
+            <span className="font-black text-slate-800 text-sm block tracking-tight">SI AMAN AI</span>
+            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block -mt-1">
+              Kab. Madiun
+            </span>
           </div>
         </div>
-      </section>
 
-      {/* Feature Grids */}
-      <section className="py-16 px-4 max-w-6xl mx-auto w-full">
-        <h2 className="text-xl font-extrabold text-slate-900 text-center mb-10 tracking-tight">
-          Layanan & Fitur Utama SI AMAN AI
-        </h2>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Feature 1 */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between">
-            <div>
-              <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-emerald-600 inline-block mb-4">
-                <Navigation className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-900">Rute Aman Spasial AI</h3>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Menganalisis rute perjalanan dengan OpenStreetMap untuk menyarankan jalur paling aman, menghindari titik rawan banjir, jalan berlubang, kecelakaan, dan minim penerangan.
-              </p>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase">
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>Didukung Leaflet & Nominatim</span>
-            </div>
-          </div>
-
-          {/* Feature 2 */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between">
-            <div>
-              <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 text-emerald-600 inline-block mb-4">
-                <FileText className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-900">Pelaporan & Kompresi Foto</h3>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Warga dapat melaporkan kejadian kerawanan di wilayah Madiun secara langsung. Dilengkapi dengan kompresi gambar otomatis client-side untuk hemat kuota dan support offline.
-              </p>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase">
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>Offline Sync + IndexedDB</span>
-            </div>
-          </div>
-
-          {/* Feature 3 */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between">
-            <div>
-              <div className="bg-red-50 p-2.5 rounded-xl border border-red-100 text-red-600 inline-block mb-4">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-900">Panic Button SOS Instan</h3>
-              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-                Tombol darurat sekali tekan yang memancarkan koordinat lokasi GPS presisi warga ke kepolisian terdekat dan BPBD Madiun untuk penanganan situasi kritis cepat.
-              </p>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-1.5 text-[10px] font-bold text-red-600 uppercase">
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>Respon SOS & GPS Akurat</span>
-            </div>
+        {/* Center Illustration and Onboarding Text */}
+        <div className="flex flex-col items-center text-center space-y-6 my-auto py-8">
+          <img 
+            src="/img/getting-started.png" 
+            alt="Safety Navigator Illustration" 
+            className="w-72 max-w-full h-auto object-contain"
+          />
+          
+          <div className="space-y-2">
+            <h2 className="text-xl font-black text-slate-900 leading-tight">
+              Panduan Navigasi & Rute Perjalanan Teraman Anda
+            </h2>
+            <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto font-medium">
+              Analisis rute cerdas menggunakan AI untuk menghindari area kriminal, banjir, kecelakaan, dan rintangan jalan di seluruh Kabupaten Madiun.
+            </p>
           </div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="mt-auto bg-white border-t border-slate-200 py-6 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <Eye className="w-4 h-4" />
-            <span>Badan Penanggulangan Keamanan Wilayah & Pemkab Madiun</span>
+        {/* Bottom Action Section */}
+        <div className="space-y-4 mb-4">
+          <Link
+            to="/warga"
+            className="w-full inline-flex justify-center items-center py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-colors"
+          >
+            Mulai
+          </Link>
+          
+          <div className="text-center">
+            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
+              Badan Penanggulangan Keamanan Wilayah & Pemkab Madiun
+            </span>
           </div>
-          <span>© 2026 SI AMAN AI. All rights reserved.</span>
         </div>
-      </footer>
+
+      </div>
     </div>
   );
 }
