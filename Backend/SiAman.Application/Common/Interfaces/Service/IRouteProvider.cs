@@ -1,0 +1,12 @@
+using SiAman.Application.Features.Navigation.DTOs;
+
+namespace SiAman.Application.Common.Interfaces.Service;
+
+public interface IRouteProvider
+{
+    Task<RouteResult> GetSafeRouteAsync(
+        double originLat,
+        double originLng,
+        double destinationLat,
+        double destinationLng);
+}

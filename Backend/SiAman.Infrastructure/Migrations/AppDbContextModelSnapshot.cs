@@ -63,6 +63,60 @@ namespace SiAman.Infrastructure.Migrations
                     b.ToTable("emergency_contacts", (string)null);
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.Incidents", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Geometry>("Geom")
+                        .IsRequired()
+                        .HasColumnType("geometry");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("LocationDescription")
+                        .HasColumnType("text");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Other")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("ReportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Incidents");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.RefreshTokens", b =>
                 {
                     b.Property<Guid>("Id")
@@ -107,6 +161,76 @@ namespace SiAman.Infrastructure.Migrations
                         .HasDatabaseName("idx_refresh_tokens_user");
 
                     b.ToTable("refresh_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("SiAman.Domain.Entities.RoadSafetySegments", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CalculatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Geometry>("Geom")
+                        .IsRequired()
+                        .HasColumnType("geometry");
+
+                    b.Property<string>("Latitude")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Longitude")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("OsmdId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SafetyScore")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RoadSafetySegments");
+                });
+
+            modelBuilder.Entity("SiAman.Domain.Entities.SafeRoutes", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<float>("AvarageSafetyScore")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("DestinationLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("DestinationLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("OriginLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("OriginLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<Geometry>("RouteGeom")
+                        .IsRequired()
+                        .HasColumnType("geometry");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SafeRoutes");
                 });
 
             modelBuilder.Entity("SiAman.Domain.Entities.UserLocations", b =>
@@ -256,10 +380,32 @@ namespace SiAman.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.Incidents", b =>
+                {
+                    b.HasOne("SiAman.Domain.Entities.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.RefreshTokens", b =>
                 {
                     b.HasOne("SiAman.Domain.Entities.Users", "User")
                         .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SiAman.Domain.Entities.SafeRoutes", b =>
+                {
+                    b.HasOne("SiAman.Domain.Entities.Users", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

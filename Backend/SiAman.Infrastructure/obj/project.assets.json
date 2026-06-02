@@ -499,6 +499,40 @@
           }
         }
       },
+      "NetTopologySuite.Features/2.0.0": {
+        "type": "package",
+        "dependencies": {
+          "NetTopologySuite": "[2.0.0, 3.0.0-A)"
+        },
+        "compile": {
+          "lib/netstandard2.0/NetTopologySuite.Features.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/NetTopologySuite.Features.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "NetTopologySuite.IO.GeoJSON/4.0.0": {
+        "type": "package",
+        "dependencies": {
+          "NetTopologySuite": "[2.0.0, 3.0.0-A)",
+          "NetTopologySuite.Features": "[2.0.0, 3.0.0-A)",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/NetTopologySuite.IO.GeoJSON.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/NetTopologySuite.IO.GeoJSON.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "NetTopologySuite.IO.PostGis/2.1.0": {
         "type": "package",
         "dependencies": {
@@ -709,6 +743,7 @@
           "Microsoft.AspNetCore.Http.Abstractions": "2.3.9",
           "Microsoft.EntityFrameworkCore": "8.0.0",
           "Microsoft.Extensions.Configuration": "10.0.7",
+          "NetTopologySuite.IO.GeoJSON": "4.0.0",
           "SiAman.Domain": "1.0.0"
         },
         "compile": {
@@ -1466,6 +1501,33 @@
         "lib/netstandard2.1/NetTopologySuite.xml",
         "nettopologysuite.2.6.0.nupkg.sha512",
         "nettopologysuite.nuspec"
+      ]
+    },
+    "NetTopologySuite.Features/2.0.0": {
+      "sha512": "RDbEpujDL0bsAyTMHlbKj36KIPhUrtSGUaO/jUjMnsLcixrJFwoDJ8p717FdgMHpQDrcEJAKF+QsAlYsSULkew==",
+      "type": "package",
+      "path": "nettopologysuite.features/2.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/NetTopologySuite.Features.dll",
+        "lib/netstandard2.0/NetTopologySuite.Features.xml",
+        "nettopologysuite.features.2.0.0.nupkg.sha512",
+        "nettopologysuite.features.nuspec"
+      ]
+    },
+    "NetTopologySuite.IO.GeoJSON/4.0.0": {
+      "sha512": "AWpcRwPAIrUZfghQat7bXK9dAckhuAxKF/Yvp+DoctLpct7pilj0Y+VCiof/8NlaclGlrISSfgnu3Tbvq6T2ug==",
+      "type": "package",
+      "path": "nettopologysuite.io.geojson/4.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "icon.png",
+        "lib/netstandard2.0/NetTopologySuite.IO.GeoJSON.dll",
+        "lib/netstandard2.0/NetTopologySuite.IO.GeoJSON.xml",
+        "nettopologysuite.io.geojson.4.0.0.nupkg.sha512",
+        "nettopologysuite.io.geojson.nuspec"
       ]
     },
     "NetTopologySuite.IO.PostGis/2.1.0": {

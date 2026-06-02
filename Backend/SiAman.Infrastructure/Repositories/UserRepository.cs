@@ -14,12 +14,21 @@ namespace SiAman.Infrastructure.Repositories
             _context = context;
         }
 
+        // 
+         public async Task<UserLocations?> GetLatestLocationAsync(Guid userId)
+    {
+        return await _context.UserLocations
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.RecordedAt)
+            .FirstOrDefaultAsync();
+    }
+
        public async Task<Users?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken)
-        => await _context.Users
-            .AsNoTracking()      // read-only, tidak perlu tracking
-            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+           Guid id,
+           CancellationToken cancellationToken)
+           => await _context.Users
+               .AsNoTracking()      // read-only, tidak perlu tracking
+               .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
         public async Task<Users> GetUserByEmail(string Email)
         {

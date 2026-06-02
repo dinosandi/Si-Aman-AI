@@ -14,16 +14,21 @@ namespace SiAman.Infrastructure.Persistence
         public DbSet<RefreshTokens> RefreshTokens => Set<RefreshTokens>();
         public DbSet<UserLocations> UserLocations => Set<UserLocations>();      // ← PascalCase
         public DbSet<EmergencyContacts> EmergencyContacts => Set<EmergencyContacts>();
+        public DbSet<SafeRoutes> SafeRoutes => Set<SafeRoutes>();
+        public DbSet<RoadSafetySegments> RoadSafetySegments { get; set; }
+        public DbSet<Incidents> Incidents => Set<Incidents>();
+        
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Aktifkan extension PostGIS di schema migration
+            // extension PostGIS di schema migration
             modelBuilder.HasPostgresExtension("postgis");
             modelBuilder.HasPostgresExtension("uuid-ossp");
 
-            // ── USERS ──────────────────────────────────────────────────
+            // ── USERS 
             modelBuilder.Entity<Users>(entity =>
             {
                 entity.ToTable("users");
@@ -80,7 +85,7 @@ namespace SiAman.Infrastructure.Persistence
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // ── USER LOCATIONS ─────────────────────────────────────────
+            // ── USER LOCATIONS 
             modelBuilder.Entity<UserLocations>(entity =>
             {
                 entity.ToTable("user_locations");
@@ -106,13 +111,13 @@ namespace SiAman.Infrastructure.Persistence
                     .HasDefaultValueSql("now()");
             });
 
-            // ── REFRESH TOKENS ─────────────────────────────────────────
+            // ── REFRESH TOKENS 
             modelBuilder.Entity<RefreshTokens>(entity =>
             {
-                // Relasi ke Users — UserId bukan UsersId
+                // Relasi ke Users 
                 entity.HasOne(x => x.User)
                     .WithMany(x => x.RefreshTokens)
-                    .HasForeignKey(x => x.UserId)       
+                    .HasForeignKey(x => x.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.ToTable("refresh_tokens");
@@ -141,7 +146,7 @@ namespace SiAman.Infrastructure.Persistence
 
             });
 
-            // ── EMERGENCY CONTACTS ─────────────────────────────────────
+            // ── EMERGENCY CONTACTS 
             modelBuilder.Entity<EmergencyContacts>(entity =>
             {
                 entity.ToTable("emergency_contacts");

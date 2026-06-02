@@ -31,6 +31,24 @@ namespace SiAman.Application.Common.Models
                 Errors = errors
             };
         }
+
+        public static ApiResponse<T> Failure(string message)
+
+        {
+
+            return new ApiResponse<T>
+
+            {
+
+                Success = false,
+
+                Message = message,
+
+                Data = default
+
+            };
+
+        }
     }
 }
 

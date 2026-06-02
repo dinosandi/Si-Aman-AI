@@ -11,7 +11,7 @@ namespace SiAman.Domain.Entities
 
         // PostGIS Point — SRID 4326 (WGS84, standar GPS)
         // Ingat: X = Longitude, Y = Latitude
-        public Point Location { get; set; } = default!;
+        public Point? Location { get; set; } = default!;
 
         // Kolom redundan tapi memudahkan query & serialisasi JSON
         public double? Latitude { get; set; }

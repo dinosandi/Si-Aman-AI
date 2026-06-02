@@ -1,5 +1,3 @@
-// Program.cs — versi bersih dengan semua perbaikan
-
 using SiAman.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using SiAman.Application.Common.Interfaces;
@@ -152,6 +150,17 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddValidatorsFromAssembly(
     typeof(ApplicationAssemblyMarker).Assembly);
 
+
+//
+builder.Services.AddHttpClient<IRouteProvider, OsrmRouteProvider>(client =>
+{
+    client.BaseAddress = new Uri(
+        builder.Configuration["Osrm:BaseUrl"] ?? "http://router.project-osrm.org/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+
+
 // ── APPLICATION SERVICES 
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ICookieService, CookieService>();
@@ -160,6 +169,13 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
+
+// Repository
+builder.Services.AddScoped<IRoadSafetyRepository, RoadSafetyRepository>();
+builder.Services.AddScoped<ISafetyScoreService, SafetyScoreService>();
+
+
 
 var app = builder.Build();
 

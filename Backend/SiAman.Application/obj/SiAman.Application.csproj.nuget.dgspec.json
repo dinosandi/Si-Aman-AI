@@ -78,6 +78,10 @@
             "Microsoft.Extensions.Configuration": {
               "target": "Package",
               "version": "[10.0.7, )"
+            },
+            "NetTopologySuite.IO.GeoJSON": {
+              "target": "Package",
+              "version": "[4.0.0, )"
             }
           },
           "imports": [
