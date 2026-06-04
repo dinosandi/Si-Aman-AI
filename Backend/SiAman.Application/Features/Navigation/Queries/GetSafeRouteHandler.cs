@@ -72,9 +72,12 @@ public class GetSafeRouteHandler
         var safetyScore = _safetyScoreService.Calculate(
             roadSegments, incidents);
 
+        // Console.WriteLine($"Route geometry: {route.GeometryJson}");
+
         // ── 5. Build response 
         var geometry = JsonSerializer.Deserialize<RouteGeometryDto>(
             route.GeometryJson);
+
 
         var result = new SafeRouteDto
         {
@@ -111,7 +114,10 @@ public class GetSafeRouteHandler
         Console.WriteLine($"Origin         : ({user.CurrentLatitude}, {user.CurrentLongitude})");
         Console.WriteLine($"Destination    : ({request.DestinationLatitude}, {request.DestinationLongitude})");
 
-        return new ApiResponse<SafeRouteDto> { Data = result, Success = true };
+        return new ApiResponse<SafeRouteDto> {
+            Message = "Rute aman berhasil dihitung",
+            Data = result,
+            Success = true };
     }
 
     // ── Helper: fetch paralel 

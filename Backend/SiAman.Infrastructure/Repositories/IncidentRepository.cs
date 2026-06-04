@@ -52,16 +52,22 @@ namespace SiAman.Infrastructure.Repositories
             Geometry routeGeometry,
             double bufferDistance)
         {
-            // Pastikan SRID 4326
-            routeGeometry.SRID = 4326;
+            var routeWkt = routeGeometry.AsText();
 
             return await _context.Incidents
-                .Where(i => i.Geom.IsWithinDistance(routeGeometry, bufferDistance))
-                .OrderByDescending(i => i.ReportedAt)
-                .AsNoTracking()
+                .FromSqlInterpolated($@"
+            SELECT *
+            FROM incidents i
+            WHERE ST_DWithin(
+                i.""Geom""::geography,
+                ST_GeomFromText({routeWkt}, 4326)::geography,
+                {bufferDistance}
+            )
+            ORDER BY i.""ReportedAt"" DESC
+        ")
                 .ToListAsync();
-
         }
+
     }
 }
 

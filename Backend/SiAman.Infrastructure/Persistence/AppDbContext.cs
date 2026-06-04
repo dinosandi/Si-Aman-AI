@@ -17,6 +17,7 @@ namespace SiAman.Infrastructure.Persistence
         public DbSet<SafeRoutes> SafeRoutes => Set<SafeRoutes>();
         public DbSet<RoadSafetySegments> RoadSafetySegments { get; set; }
         public DbSet<Incidents> Incidents => Set<Incidents>();
+        public DbSet<UserHomeLocations> UserHomeLocations => Set<UserHomeLocations>();
 
 
 

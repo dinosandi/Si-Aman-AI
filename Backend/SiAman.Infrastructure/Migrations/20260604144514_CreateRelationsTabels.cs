@@ -193,6 +193,30 @@ namespace SiAman.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "UserHomeLocations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    HomeLocation = table.Column<Point>(type: "geometry", nullable: true),
+                    Latitude = table.Column<double>(type: "double precision", nullable: false),
+                    Longitude = table.Column<double>(type: "double precision", nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: false),
+                    IsVerified = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserHomeLocations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserHomeLocations_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_emergency_contacts_UserId",
                 table: "emergency_contacts",
@@ -236,6 +260,11 @@ namespace SiAman.Infrastructure.Migrations
                 columns: new[] { "UserId", "RecordedAt" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserHomeLocations_UserId",
+                table: "UserHomeLocations",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "idx_users_email",
                 table: "users",
                 column: "Email",
@@ -268,6 +297,9 @@ namespace SiAman.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "user_locations");
+
+            migrationBuilder.DropTable(
+                name: "UserHomeLocations");
 
             migrationBuilder.DropTable(
                 name: "users");

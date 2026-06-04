@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SiAman.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c125deefa025cf00e6f3cfc793e4d12de742207e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3410e3a3fcfd075999aaccb3f709ca3f38ad3bc4")]
 [assembly: System.Reflection.AssemblyProductAttribute("SiAman.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SiAman.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

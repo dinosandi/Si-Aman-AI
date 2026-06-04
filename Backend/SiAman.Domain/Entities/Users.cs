@@ -1,4 +1,4 @@
-using NetTopologySuite.Geometries; 
+using NetTopologySuite.Geometries;
 using SiAman.Domain.Enums;
 
 namespace SiAman.Domain.Entities
@@ -40,6 +40,7 @@ namespace SiAman.Domain.Entities
         public DateTime UpdatedAt { get; set; }
 
         // Navigation properties
+        public ICollection<UserHomeLocations> HomeLocations { get; set; } = new List<UserHomeLocations>();
         public ICollection<UserLocations?> Locations { get; set; } = new List<UserLocations>();
         public ICollection<RefreshTokens> RefreshTokens { get; set; } = new List<RefreshTokens>();
         public ICollection<EmergencyContacts> EmergencyContacts { get; set; } = new List<EmergencyContacts>();

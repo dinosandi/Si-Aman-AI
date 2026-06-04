@@ -22,6 +22,9 @@ namespace SiAman.Infrastructure.Repositories
             // Pastikan SRID 4326
             routeGeometry.SRID = 4326;
 
+            Console.WriteLine(routeGeometry.AsText());
+            Console.WriteLine(routeGeometry.SRID);
+
             // ST_DWithin dengan ::geography otomatis pakai meter (bukan derajat)
             // 35 meter toleransi untuk jalan yang sedikit offset dari route line
             const double toleranceMeters = 35.0;

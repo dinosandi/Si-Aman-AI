@@ -70,24 +70,23 @@ public class RegisterHandler
         if (request.Latitude.HasValue &&
             request.Longitude.HasValue)
         {
-            user.Locations.Add(
-    new UserLocations
-    {
-        Id = Guid.NewGuid(),
+            user.HomeLocations.Add(
+            new UserHomeLocations
+            {
+                Id = Guid.NewGuid(),
 
-        Latitude = request.Latitude.Value,
-        Longitude = request.Longitude.Value,
+                Latitude = request.Latitude.Value,
+                Longitude = request.Longitude.Value,
 
-        Location = new Point(
-            request.Longitude.Value,
-            request.Latitude.Value)
-        {
-            SRID = 4326
-        },
-
-        RecordedAt = DateTimeOffset.UtcNow
-    });
-        }
+                HomeLocation = new Point(
+                    request.Longitude.Value,
+                    request.Latitude.Value)
+                {
+                    SRID = 4326
+                },
+                Address = request.Address,
+            });
+                }
 
         await _userRepository.AddUserAsync(user);
 

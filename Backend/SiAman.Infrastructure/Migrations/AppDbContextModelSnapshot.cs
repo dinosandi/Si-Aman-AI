@@ -252,6 +252,41 @@ namespace SiAman.Infrastructure.Migrations
                     b.ToTable("SafeRoutes");
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.UserHomeLocations", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Point>("HomeLocation")
+                        .HasColumnType("geometry");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserHomeLocations");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.UserLocations", b =>
                 {
                     b.Property<Guid>("Id")
@@ -431,6 +466,17 @@ namespace SiAman.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.UserHomeLocations", b =>
+                {
+                    b.HasOne("SiAman.Domain.Entities.Users", "User")
+                        .WithMany("HomeLocations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.UserLocations", b =>
                 {
                     b.HasOne("SiAman.Domain.Entities.Users", "User")
@@ -445,6 +491,8 @@ namespace SiAman.Infrastructure.Migrations
             modelBuilder.Entity("SiAman.Domain.Entities.Users", b =>
                 {
                     b.Navigation("EmergencyContacts");
+
+                    b.Navigation("HomeLocations");
 
                     b.Navigation("Locations");
 
