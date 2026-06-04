@@ -1,4 +1,3 @@
-import React from "react";
 import { Compass, Plus, Settings } from "lucide-react";
 
 interface BottomNavProps {
