@@ -17,7 +17,7 @@ namespace SiAman.Infrastructure.Persistence
         public DbSet<SafeRoutes> SafeRoutes => Set<SafeRoutes>();
         public DbSet<RoadSafetySegments> RoadSafetySegments { get; set; }
         public DbSet<Incidents> Incidents => Set<Incidents>();
-        
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -47,7 +47,6 @@ namespace SiAman.Infrastructure.Persistence
                 // Partial index: hanya unik jika ProviderId tidak null
                 entity.HasIndex(x => new { x.Provider, x.ProviderId })
                     .IsUnique()
-                    .HasFilter("provider_id IS NOT NULL")
                     .HasDatabaseName("idx_users_provider");
 
                 entity.Property(x => x.Role)
@@ -165,6 +164,51 @@ namespace SiAman.Infrastructure.Persistence
                 entity.Property(x => x.CreatedAt)
                     .HasDefaultValueSql("now()");
             });
+
+            // ── INCIDENTS
+            modelBuilder.Entity<Incidents>(entity =>
+                {
+                    entity.ToTable("incidents");
+                    entity.HasKey(x => x.Id);
+                    entity.Property(x => x.Id)
+                    .HasDefaultValueSql("uuid_generate_v4()");
+
+                    entity.Property(x => x.Type)
+                    .HasConversion<string>()
+                    .HasColumnType("text");
+
+                    entity.Property(x => x.Status)
+                    .HasConversion<string>()
+                    .HasColumnType("text");
+
+                    entity.Property(x => x.ImageUrl)
+                    .IsRequired()
+                    .HasMaxLength(1024);
+
+                    // PostGIS geometry column
+                    entity.Property(x => x.Geom)
+                    .HasColumnType("geometry(Point, 4326)");
+
+                    // Index spasial GIST untuk query ST_DWithin / IsWithinDistance
+                    entity.HasIndex(x => x.Geom)
+                    .HasMethod("GIST")
+                    .HasDatabaseName("idx_incidents_geom");
+
+                    entity.Property(x => x.ReportedAt)
+                    .HasDefaultValueSql("now()");
+
+                    entity.Property(x => x.CreatedAt)
+                    .HasDefaultValueSql("now()");
+
+                    entity.Property(x => x.UpdatedAt)
+                    .HasDefaultValueSql("now()");
+
+                    entity.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                });
+
         }
     }
 }

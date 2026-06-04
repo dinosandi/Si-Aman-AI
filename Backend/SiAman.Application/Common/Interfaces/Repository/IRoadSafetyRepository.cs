@@ -9,6 +9,12 @@ namespace SiAman.Application.Common.Interfaces.Repository
         Task<List<RoadSafetySegments>> GetIntersectedSegmentsAsync(
             Geometry routeGeometry
         );
+         Task<HashSet<long>> GetExistingOsmIdsAsync(
+            CancellationToken ct = default);
+
+        Task BulkInsertAsync(
+            List<RoadSafetySegments> segments,
+            CancellationToken ct = default);
     }
 }
 

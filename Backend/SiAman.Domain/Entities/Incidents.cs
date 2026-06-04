@@ -18,8 +18,7 @@ namespace SiAman.Domain.Entities
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public StatusIncidents Status { get; set; } = default!; 
-        public Geometry Geom { get; set; } = default!; // Kolom Geometry untuk penyimpanan spasial (SRID 4326)
-
+        public Point Geom { get; set; } = default!; // Kolom Geometry untuk penyimpanan spasial (SRID 4326)
         public DateTimeOffset ReportedAt { get; set; }
         public DateTimeOffset? ResolvedAt { get; set; }
 

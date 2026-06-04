@@ -1,8 +1,11 @@
 using SiAman.Domain.Entities;
 
-namespace SiAman.Application.Common.Interfaces.Service;
-
-public interface ISafetyScoreService
+namespace SiAman.Application.Common.Interfaces.Service
 {
-    double Calculate(List<RoadSafetySegments> segments);
+    public interface ISafetyScoreService
+    {
+        double Calculate(
+            List<RoadSafetySegments> roadSegments,
+            List<Incidents>          incidents);
+    }
 }

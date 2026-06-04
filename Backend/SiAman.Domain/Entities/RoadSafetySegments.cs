@@ -10,7 +10,7 @@ namespace SiAman.Domain.Entities
         public long OsmdId { get; set; }
         public string Latitude { get; set; } = default!;
         public string Longitude { get; set; } = default!;
-        public Geometry Geom { get; set; } = default!;
+        public LineString Geom { get; set; } = default!;
 
         public DateTimeOffset CalculatedAt { get; set; }
         public SafetyScore SafetyScore { get; set; }

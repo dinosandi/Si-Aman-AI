@@ -14,6 +14,8 @@ using SiAman.Application.Common.Behaviours;
 using FluentValidation;
 using SiAman.API.Middleware;
 using SiAman.Application;
+using SiAman.API.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -132,7 +134,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions => npgsqlOptions.UseNetTopologySuite()  // ← WAJIB untuk PostGIS
+        npgsqlOptions => npgsqlOptions.UseNetTopologySuite()  // untuk PostGIS
     )
 );
 
@@ -156,8 +158,16 @@ builder.Services.AddHttpClient<IRouteProvider, OsrmRouteProvider>(client =>
 {
     client.BaseAddress = new Uri(
         builder.Configuration["Osrm:BaseUrl"] ?? "http://router.project-osrm.org/");
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.Timeout = TimeSpan.FromMinutes(5);
+    client.DefaultRequestHeaders.Add(
+        "User-Agent",
+        "SiAman/1.0");
 });
+
+
+// WebSockets untuk real-time updates lokasi user
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
 
 
@@ -169,11 +179,18 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
 builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
 
-// Repository
+builder.Services.AddScoped<IOsmDataProvider, OsmDataProvider>();
+
 builder.Services.AddScoped<IRoadSafetyRepository, RoadSafetyRepository>();
 builder.Services.AddScoped<ISafetyScoreService, SafetyScoreService>();
+
+builder.Services.AddScoped<ISafetyScoreService, SafetyScoreService>();
+
+builder.Services.AddScoped<IIncidentRepository, IncidentRepository>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
 
 
@@ -191,5 +208,8 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<LocationHub>("/hubs/location");
+
+app.UseStaticFiles();
 
 app.Run();

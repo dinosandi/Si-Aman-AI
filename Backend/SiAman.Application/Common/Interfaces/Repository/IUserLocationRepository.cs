@@ -5,7 +5,8 @@ namespace SiAman.Application.Common.Interfaces.Repository
 
     public interface IUserLocationRepository
     {
-        Task<UserLocations?>GetLatestLocationAsync(Guid userId);
+        Task<UserLocations?> GetLatestLocationAsync(Guid userId);
+        Task AddAsync(UserLocations userLocation);  
 
     }
 }

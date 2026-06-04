@@ -26,5 +26,17 @@ namespace SiAman.Infrastructure.Services
             _ => 50.0
         };
 
+        public double Calculate(List<RoadSafetySegments> roadSegments, List<Incidents> incidents)
+        {
+            var baseScore = roadSegments.Any()
+                ? roadSegments.Average(s => MapScore(s.SafetyScore))
+                : 100.0; // Jika tidak ada data segmen, anggap aman
+
+            var incidentPenalty = incidents.Count * 10; // Setiap insiden mengurangi 10 poin
+
+            return Math.Clamp(baseScore - incidentPenalty, 0, 100);
+
+
+        }
     }
 }

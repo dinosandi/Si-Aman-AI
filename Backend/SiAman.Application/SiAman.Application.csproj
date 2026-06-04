@@ -20,6 +20,7 @@
     <Folder Include="Common\Behaviours\" />
     <Folder Include="Common\Exceptions\" />
     <Folder Include="Common\Models\" />
+    <Folder Include="Common\Services\" />
     <Folder Include="Features\Auth\Commands\LoginManualWithEmail\" />
     <Folder Include="Features\Auth\Commands\LoginWithGoogle\" />
     <Folder Include="Features\Auth\Commands\RefreshToken\" />
@@ -29,11 +30,15 @@
     <Folder Include="Features\Incidents\" />
     <Folder Include="Features\Incidents\Commands\" />
     <Folder Include="Features\Incidents\Commands\CreateIncident\" />
+    <Folder Include="Features\Incidents\DTOs\" />
     <Folder Include="Features\Incidents\Queries\" />
+    <Folder Include="Features\Location\" />
+    <Folder Include="Features\Location\Commands\" />
     <Folder Include="Features\Navigation\" />
     <Folder Include="Features\Navigation\DTOs\" />
     <Folder Include="Features\Navigation\Queries\" />
-    <Folder Include="Features\Navigation\Services\" />
+    <Folder Include="Features\OsmSeeder\" />
+    <Folder Include="Features\OsmSeeder\Commands\" />
     <Folder Include="Features\SafeRoute\" />
     <Folder Include="Features\SafeRoute\Commands\" />
     <Folder Include="Features\SafeRoute\Commands\CalculateSafeRoute\" />

@@ -13,8 +13,8 @@ using SiAman.Infrastructure.Persistence;
 namespace SiAman.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260601095134_CreateRelationsTabels1")]
-    partial class CreateRelationsTabels1
+    [Migration("20260603151547_CreateRelationsTabels")]
+    partial class CreateRelationsTabels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -70,18 +70,26 @@ namespace SiAman.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("uuid_generate_v4()");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Geometry>("Geom")
+                    b.Property<Point>("Geom")
                         .IsRequired()
-                        .HasColumnType("geometry");
+                        .HasColumnType("geometry(Point, 4326)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
 
                     b.Property<double?>("Latitude")
                         .HasColumnType("double precision");
@@ -96,28 +104,39 @@ namespace SiAman.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("ReportedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTimeOffset?>("ResolvedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Geom")
+                        .HasDatabaseName("idx_incidents_geom");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Geom"), "GIST");
+
                     b.HasIndex("UserId");
 
-                    b.ToTable("Incidents");
+                    b.ToTable("incidents", (string)null);
                 });
 
             modelBuilder.Entity("SiAman.Domain.Entities.RefreshTokens", b =>
@@ -175,7 +194,7 @@ namespace SiAman.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CalculatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Geometry>("Geom")
+                    b.Property<LineString>("Geom")
                         .IsRequired()
                         .HasColumnType("geometry");
 
@@ -366,8 +385,7 @@ namespace SiAman.Infrastructure.Migrations
 
                     b.HasIndex("Provider", "ProviderId")
                         .IsUnique()
-                        .HasDatabaseName("idx_users_provider")
-                        .HasFilter("provider_id IS NOT NULL");
+                        .HasDatabaseName("idx_users_provider");
 
                     b.ToTable("users", (string)null);
                 });
@@ -388,7 +406,7 @@ namespace SiAman.Infrastructure.Migrations
                     b.HasOne("SiAman.Domain.Entities.Users", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");

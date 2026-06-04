@@ -23,6 +23,13 @@ namespace SiAman.Infrastructure.Repositories
                 .FirstOrDefaultAsync();
         }
 
+        public async Task AddAsync(UserLocations userLocation)
+        {
+            await _context.UserLocations.AddAsync(userLocation);
+            await _context.SaveChangesAsync();
+        }
+        
+
 
     }
 

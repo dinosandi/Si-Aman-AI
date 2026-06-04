@@ -62,6 +62,14 @@ namespace SiAman.Infrastructure.Repositories
 
             return user;
         }
+
+        public async Task<Users> UpdateAsync(Users user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();

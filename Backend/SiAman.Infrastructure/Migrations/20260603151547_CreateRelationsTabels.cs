@@ -7,7 +7,7 @@ using NetTopologySuite.Geometries;
 namespace SiAman.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddRelations_Postgis : Migration
+    public partial class CreateRelationsTabels : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,6 +15,23 @@ namespace SiAman.Infrastructure.Migrations
             migrationBuilder.AlterDatabase()
                 .Annotation("Npgsql:PostgresExtension:postgis", ",,")
                 .Annotation("Npgsql:PostgresExtension:uuid-ossp", ",,");
+
+            migrationBuilder.CreateTable(
+                name: "RoadSafetySegments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OsmdId = table.Column<long>(type: "bigint", nullable: false),
+                    Latitude = table.Column<string>(type: "text", nullable: false),
+                    Longitude = table.Column<string>(type: "text", nullable: false),
+                    Geom = table.Column<LineString>(type: "geometry", nullable: false),
+                    CalculatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    SafetyScore = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RoadSafetySegments", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "users",
@@ -71,6 +88,37 @@ namespace SiAman.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "incidents",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "uuid_generate_v4()"),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Type = table.Column<string>(type: "text", nullable: false),
+                    Other = table.Column<string>(type: "text", nullable: true),
+                    ImageUrl = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    LocationDescription = table.Column<string>(type: "text", nullable: true),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    Geom = table.Column<Point>(type: "geometry(Point, 4326)", nullable: false),
+                    ReportedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    ResolvedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_incidents", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_incidents_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "refresh_tokens",
                 columns: table => new
                 {
@@ -89,6 +137,31 @@ namespace SiAman.Infrastructure.Migrations
                     table.PrimaryKey("PK_refresh_tokens", x => x.Id);
                     table.ForeignKey(
                         name: "FK_refresh_tokens_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SafeRoutes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OriginLatitude = table.Column<double>(type: "double precision", nullable: false),
+                    OriginLongitude = table.Column<double>(type: "double precision", nullable: false),
+                    DestinationLatitude = table.Column<double>(type: "double precision", nullable: false),
+                    DestinationLongitude = table.Column<double>(type: "double precision", nullable: false),
+                    RouteGeom = table.Column<Geometry>(type: "geometry", nullable: false),
+                    AvarageSafetyScore = table.Column<float>(type: "real", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SafeRoutes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SafeRoutes_users_UserId",
                         column: x => x.UserId,
                         principalTable: "users",
                         principalColumn: "Id",
@@ -126,6 +199,17 @@ namespace SiAman.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "idx_incidents_geom",
+                table: "incidents",
+                column: "Geom")
+                .Annotation("Npgsql:IndexMethod", "GIST");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_incidents_UserId",
+                table: "incidents",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "idx_refresh_tokens_hash",
                 table: "refresh_tokens",
                 column: "TokenHash");
@@ -134,6 +218,11 @@ namespace SiAman.Infrastructure.Migrations
                 name: "idx_refresh_tokens_user",
                 table: "refresh_tokens",
                 columns: new[] { "UserId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SafeRoutes_UserId",
+                table: "SafeRoutes",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "idx_user_locations_geom",
@@ -152,9 +241,11 @@ namespace SiAman.Infrastructure.Migrations
                 column: "Email",
                 unique: true);
 
-            migrationBuilder.Sql(
-                @"CREATE UNIQUE INDEX idx_users_provider ON users (""Provider"", ""ProviderId"") WHERE ""ProviderId"" IS NOT NULL;"
-            );
+            migrationBuilder.CreateIndex(
+                name: "idx_users_provider",
+                table: "users",
+                columns: new[] { "Provider", "ProviderId" },
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -164,7 +255,16 @@ namespace SiAman.Infrastructure.Migrations
                 name: "emergency_contacts");
 
             migrationBuilder.DropTable(
+                name: "incidents");
+
+            migrationBuilder.DropTable(
                 name: "refresh_tokens");
+
+            migrationBuilder.DropTable(
+                name: "RoadSafetySegments");
+
+            migrationBuilder.DropTable(
+                name: "SafeRoutes");
 
             migrationBuilder.DropTable(
                 name: "user_locations");
