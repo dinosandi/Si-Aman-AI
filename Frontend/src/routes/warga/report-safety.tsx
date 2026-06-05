@@ -30,6 +30,7 @@ function WargaReportSafety() {
   const createReport = useCreateReport();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // TanStack Form Setup
   const form = useForm({
@@ -46,6 +47,7 @@ function WargaReportSafety() {
       try {
         const result = await createReport.mutateAsync(value);
         setSuccessMessage(result.message);
+        setPreviewUrl(null);
         form.reset();
       } catch (err) {
         console.error(err);
@@ -273,7 +275,6 @@ function WargaReportSafety() {
           {/* Image Upload Field */}
           <form.Field name="image">
             {(field) => {
-              const [previewUrl, setPreviewUrl] = useState<string | null>(null);
               const handleFileChange = (
                 e: React.ChangeEvent<HTMLInputElement>,
               ) => {

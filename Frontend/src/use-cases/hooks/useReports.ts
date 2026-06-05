@@ -1,23 +1,21 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { httpClient } from '../../infrastructure/api/httpClient';
-import { OfflineStorage } from '../../infrastructure/storage/indexedDb';
-import type { Report, CreateReportInput } from '../../domain/entities/report';
-import { compressImage } from '../../infrastructure/utils/imageCompressor';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { incidentRepository } from "../../infrastructure/repositories";
+import { OfflineStorage } from "../../infrastructure/storage/indexedDb";
+import type { Report, CreateReportInput } from "../../domain/entities/report";
+import { compressImage } from "../../infrastructure/utils/imageCompressor";
 
-const REPORTS_CACHE_KEY = 'reports';
+const REPORTS_CACHE_KEY = "reports";
 
-// Fetch reports with offline fallback
-const fetchReports = async (district?: string): Promise<Report[]> => {
-  const cacheKey = `reports_list_${district || 'all'}`;
+// Fetch reports using Repository (with spatial coordinates for Mejayan/Madiun as default)
+const fetchReports = async (lat: number = -7.6167, lng: number = 111.65, radius: number = 50000): Promise<Report[]> => {
+  const cacheKey = `reports_list_${lat}_${lng}_${radius}`;
   try {
-    const response = await httpClient.get<any, Report[]>('/reports', {
-      params: { district },
-    });
-    // Cache list in IndexedDB
+    const response = await incidentRepository.getNearby(lat, lng, radius);
+    // Cache the list in IndexedDB for offline fallback
     await OfflineStorage.cacheSpatialData(cacheKey, response);
     return response;
   } catch (error: any) {
-    if (error.code === 'NETWORK_OFFLINE') {
+    if (error.code === "NETWORK_OFFLINE" || !navigator.onLine) {
       const cached = await OfflineStorage.getCachedSpatialData<Report[]>(cacheKey);
       if (cached) return cached;
     }
@@ -25,10 +23,10 @@ const fetchReports = async (district?: string): Promise<Report[]> => {
   }
 };
 
-export const useReports = (district?: string) => {
+export const useReports = (lat: number = -7.6167, lng: number = 111.65, radius: number = 50000) => {
   return useQuery({
-    queryKey: [REPORTS_CACHE_KEY, district],
-    queryFn: () => fetchReports(district),
+    queryKey: [REPORTS_CACHE_KEY, lat, lng, radius],
+    queryFn: () => fetchReports(lat, lng, radius),
     staleTime: 2 * 60 * 1000,
   });
 };
@@ -44,7 +42,7 @@ export const useCreateReport = () => {
         try {
           compressedImage = await compressImage(newReport.image);
         } catch (err) {
-          console.error('Failed to compress image, using original:', err);
+          console.error("Failed to compress image, using original:", err);
         }
       }
 
@@ -58,34 +56,20 @@ export const useCreateReport = () => {
         return {
           isOfflineSaved: true,
           tempId,
-          message: 'Laporan Anda disimpan secara lokal (Offline) dan akan disinkronkan saat terhubung kembali.',
+          message: "Laporan Anda disimpan secara lokal (Offline) dan akan disinkronkan saat terhubung kembali.",
         };
       }
 
-      // 2. Device is online, post to server
-      const formData = new FormData();
-      formData.append('category', newReport.category);
-      formData.append('title', newReport.title);
-      formData.append('description', newReport.description);
-      formData.append('latitude', newReport.latitude.toString());
-      formData.append('longitude', newReport.longitude.toString());
-      if (newReport.address) formData.append('address', newReport.address);
-      if (newReport.district) formData.append('district', newReport.district);
-      if (compressedImage) {
-        // Append compressed image
-        formData.append('image', compressedImage, 'report_image.jpg');
-      }
-
-      const response = await httpClient.post<any, Report>('/reports', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      // 2. Device is online, post to server via repository
+      const response = await incidentRepository.create({
+        ...newReport,
+        image: compressedImage,
       });
 
       return {
         isOfflineSaved: false,
         data: response,
-        message: 'Laporan berhasil terkirim dan dipublikasikan.',
+        message: "Laporan berhasil terkirim dan dipublikasikan.",
       };
     },
     onSuccess: (result) => {
@@ -108,23 +92,7 @@ export const useSyncOfflineReports = () => {
       let syncedCount = 0;
       for (const report of offlineReports) {
         try {
-          const formData = new FormData();
-          formData.append('category', report.category);
-          formData.append('title', report.title);
-          formData.append('description', report.description);
-          formData.append('latitude', report.latitude.toString());
-          formData.append('longitude', report.longitude.toString());
-          if (report.address) formData.append('address', report.address);
-          if (report.district) formData.append('district', report.district);
-          if (report.image) {
-            formData.append('image', report.image, 'report_image.jpg');
-          }
-          
-          await httpClient.post('/reports', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+          await incidentRepository.create(report);
           await OfflineStorage.deleteOfflineReport(report.tempId);
           syncedCount++;
         } catch (err) {

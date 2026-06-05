@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.API\\SiAman.API.csproj": {}
+    "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.API/SiAman.API.csproj": {}
   },
   "projects": {
-    "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.API\\SiAman.API.csproj": {
+    "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.API/SiAman.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.API\\SiAman.API.csproj",
+        "projectUniqueName": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.API/SiAman.API.csproj",
         "projectName": "SiAman.API",
-        "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.API\\SiAman.API.csproj",
-        "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.API\\obj\\",
+        "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.API/SiAman.API.csproj",
+        "packagesPath": "/home/danipinion/.nuget/packages/",
+        "outputPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.API/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/danipinion/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -26,11 +26,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\SiAman.Application.csproj": {
-                "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\SiAman.Application.csproj"
+              "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/SiAman.Application.csproj": {
+                "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/SiAman.Application.csproj"
               },
-              "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Infrastructure\\SiAman.Infrastructure.csproj": {
-                "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Infrastructure\\SiAman.Infrastructure.csproj"
+              "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Infrastructure/SiAman.Infrastructure.csproj": {
+                "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Infrastructure/SiAman.Infrastructure.csproj"
               }
             }
           }
@@ -44,7 +44,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -92,6 +93,16 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.25, 8.0.25]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
+              "version": "[8.0.25, 8.0.25]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -100,21 +111,21 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\SiAman.Application.csproj": {
+    "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/SiAman.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\SiAman.Application.csproj",
+        "projectUniqueName": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/SiAman.Application.csproj",
         "projectName": "SiAman.Application",
-        "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\SiAman.Application.csproj",
-        "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\obj\\",
+        "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/SiAman.Application.csproj",
+        "packagesPath": "/home/danipinion/.nuget/packages/",
+        "outputPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/danipinion/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -126,8 +137,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj": {
-                "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj"
+              "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj": {
+                "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj"
               }
             }
           }
@@ -141,7 +152,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -195,26 +207,32 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.25, 8.0.25]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj": {
+    "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj",
+        "projectUniqueName": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj",
         "projectName": "SiAman.Domain",
-        "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj",
-        "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\obj\\",
+        "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj",
+        "packagesPath": "/home/danipinion/.nuget/packages/",
+        "outputPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/danipinion/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -237,7 +255,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -259,26 +278,32 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.25, 8.0.25]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Infrastructure\\SiAman.Infrastructure.csproj": {
+    "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Infrastructure/SiAman.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Infrastructure\\SiAman.Infrastructure.csproj",
+        "projectUniqueName": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Infrastructure/SiAman.Infrastructure.csproj",
         "projectName": "SiAman.Infrastructure",
-        "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Infrastructure\\SiAman.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Infrastructure\\obj\\",
+        "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Infrastructure/SiAman.Infrastructure.csproj",
+        "packagesPath": "/home/danipinion/.nuget/packages/",
+        "outputPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Infrastructure/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/danipinion/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -290,11 +315,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\SiAman.Application.csproj": {
-                "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Application\\SiAman.Application.csproj"
+              "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/SiAman.Application.csproj": {
+                "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Application/SiAman.Application.csproj"
               },
-              "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj": {
-                "projectPath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj"
+              "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj": {
+                "projectPath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj"
               }
             }
           }
@@ -308,7 +333,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net8.0": {
@@ -354,6 +380,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.25, 8.0.25]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -362,7 +394,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.421/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.104/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

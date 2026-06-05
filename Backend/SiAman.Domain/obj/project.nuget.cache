@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "lM18fh/Qmnw=",
+  "dgSpecHash": "Ud5tRT8ZaEo=",
   "success": true,
-  "projectFilePath": "D:\\Lomba Inovasi\\Si-Aman-AI\\Backend\\SiAman.Domain\\SiAman.Domain.csproj",
+  "projectFilePath": "/mnt/data/ngoding/Lomba/Si-Aman-AI/Backend/SiAman.Domain/SiAman.Domain.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\Administrator\\.nuget\\packages\\nettopologysuite\\2.6.0\\nettopologysuite.2.6.0.nupkg.sha512"
+    "/home/danipinion/.nuget/packages/nettopologysuite/2.6.0/nettopologysuite.2.6.0.nupkg.sha512",
+    "/home/danipinion/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.25/microsoft.aspnetcore.app.ref.8.0.25.nupkg.sha512"
   ],
   "logs": []
 }

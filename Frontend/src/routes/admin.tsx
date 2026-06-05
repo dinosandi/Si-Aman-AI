@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useLocation } from '@tanstack/react-router';
-import { LayoutDashboard, FileSpreadsheet, Settings, LogOut, ShieldCheck, User, Lock } from 'lucide-react';
+import { LayoutDashboard, FileSpreadsheet, LogOut, ShieldCheck, User, Lock } from 'lucide-react';
 import { useState } from 'react';
 
 export const Route = createFileRoute('/admin')({

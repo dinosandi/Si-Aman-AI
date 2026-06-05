@@ -16,6 +16,8 @@ import { Route as WargaIndexRouteImport } from './routes/warga/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as WargaSosRouteImport } from './routes/warga/sos'
 import { Route as WargaReportSafetyRouteImport } from './routes/warga/report-safety'
+import { Route as WargaProfileRouteImport } from './routes/warga/profile'
+import { Route as WargaMessagesRouteImport } from './routes/warga/messages'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 
 const WargaRoute = WargaRouteImport.update({
@@ -53,6 +55,16 @@ const WargaReportSafetyRoute = WargaReportSafetyRouteImport.update({
   path: '/report-safety',
   getParentRoute: () => WargaRoute,
 } as any)
+const WargaProfileRoute = WargaProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => WargaRoute,
+} as any)
+const WargaMessagesRoute = WargaMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => WargaRoute,
+} as any)
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -64,6 +76,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/warga': typeof WargaRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
+  '/warga/messages': typeof WargaMessagesRoute
+  '/warga/profile': typeof WargaProfileRoute
   '/warga/report-safety': typeof WargaReportSafetyRoute
   '/warga/sos': typeof WargaSosRoute
   '/admin/': typeof AdminIndexRoute
@@ -72,6 +86,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/reports': typeof AdminReportsRoute
+  '/warga/messages': typeof WargaMessagesRoute
+  '/warga/profile': typeof WargaProfileRoute
   '/warga/report-safety': typeof WargaReportSafetyRoute
   '/warga/sos': typeof WargaSosRoute
   '/admin': typeof AdminIndexRoute
@@ -83,6 +99,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/warga': typeof WargaRouteWithChildren
   '/admin/reports': typeof AdminReportsRoute
+  '/warga/messages': typeof WargaMessagesRoute
+  '/warga/profile': typeof WargaProfileRoute
   '/warga/report-safety': typeof WargaReportSafetyRoute
   '/warga/sos': typeof WargaSosRoute
   '/admin/': typeof AdminIndexRoute
@@ -95,6 +113,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/warga'
     | '/admin/reports'
+    | '/warga/messages'
+    | '/warga/profile'
     | '/warga/report-safety'
     | '/warga/sos'
     | '/admin/'
@@ -103,6 +123,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin/reports'
+    | '/warga/messages'
+    | '/warga/profile'
     | '/warga/report-safety'
     | '/warga/sos'
     | '/admin'
@@ -113,6 +135,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/warga'
     | '/admin/reports'
+    | '/warga/messages'
+    | '/warga/profile'
     | '/warga/report-safety'
     | '/warga/sos'
     | '/admin/'
@@ -176,6 +200,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WargaReportSafetyRouteImport
       parentRoute: typeof WargaRoute
     }
+    '/warga/profile': {
+      id: '/warga/profile'
+      path: '/profile'
+      fullPath: '/warga/profile'
+      preLoaderRoute: typeof WargaProfileRouteImport
+      parentRoute: typeof WargaRoute
+    }
+    '/warga/messages': {
+      id: '/warga/messages'
+      path: '/messages'
+      fullPath: '/warga/messages'
+      preLoaderRoute: typeof WargaMessagesRouteImport
+      parentRoute: typeof WargaRoute
+    }
     '/admin/reports': {
       id: '/admin/reports'
       path: '/reports'
@@ -199,12 +237,16 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface WargaRouteChildren {
+  WargaMessagesRoute: typeof WargaMessagesRoute
+  WargaProfileRoute: typeof WargaProfileRoute
   WargaReportSafetyRoute: typeof WargaReportSafetyRoute
   WargaSosRoute: typeof WargaSosRoute
   WargaIndexRoute: typeof WargaIndexRoute
 }
 
 const WargaRouteChildren: WargaRouteChildren = {
+  WargaMessagesRoute: WargaMessagesRoute,
+  WargaProfileRoute: WargaProfileRoute,
   WargaReportSafetyRoute: WargaReportSafetyRoute,
   WargaSosRoute: WargaSosRoute,
   WargaIndexRoute: WargaIndexRoute,
