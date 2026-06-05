@@ -5,19 +5,50 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.74.0" />
     <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.7" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Common\" />
-    <Folder Include="Common\Behaviors\" />
+    <Folder Include="Common\Behaviours\" />
     <Folder Include="Common\Exceptions\" />
-    <Folder Include="Common\Interfaces\" />
     <Folder Include="Common\Models\" />
-    <Folder Include="Features\" />
-    <Folder Include="Features\Auth\" />
+    <Folder Include="Common\Services\" />
+    <Folder Include="Features\Auth\Commands\LoginManualWithEmail\" />
+    <Folder Include="Features\Auth\Commands\LoginWithGoogle\" />
+    <Folder Include="Features\Auth\Commands\RefreshToken\" />
+    <Folder Include="Features\Auth\DTOs\" />
+    <Folder Include="Features\Auth\Queries\" />
+    <Folder Include="Features\Auth\Queries\GetCurrentUser\" />
+    <Folder Include="Features\Incidents\" />
+    <Folder Include="Features\Incidents\Commands\" />
+    <Folder Include="Features\Incidents\Commands\CreateIncident\" />
+    <Folder Include="Features\Incidents\DTOs\" />
+    <Folder Include="Features\Incidents\Queries\" />
+    <Folder Include="Features\Location\" />
+    <Folder Include="Features\Location\Commands\" />
+    <Folder Include="Features\Navigation\" />
+    <Folder Include="Features\Navigation\DTOs\" />
+    <Folder Include="Features\Navigation\Queries\" />
+    <Folder Include="Features\OsmSeeder\" />
+    <Folder Include="Features\OsmSeeder\Commands\" />
+    <Folder Include="Features\SafeRoute\" />
+    <Folder Include="Features\SafeRoute\Commands\" />
+    <Folder Include="Features\SafeRoute\Commands\CalculateSafeRoute\" />
+    <Folder Include="Features\SafeRoute\Commands\DeleteSafeRoute\" />
+    <Folder Include="Features\SafeRoute\Commands\SaveSafeRoute\" />
+    <Folder Include="Features\SafeRoute\DTOs\" />
+    <Folder Include="Users\" />
+    <Folder Include="Users\Command\" />
+    <Folder Include="Users\Command\Login\" />
+    <Folder Include="Users\Handler\" />
   </ItemGroup>
 
   <PropertyGroup>
