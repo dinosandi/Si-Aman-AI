@@ -59,7 +59,22 @@ const geocodeAddress = async (
   return null;
 };
 
+const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const lat1Rad = (lat1 * Math.PI) / 180;
+  const lat2Rad = (lat2 * Math.PI) / 180;
+
+  const y = Math.sin(dLon) * Math.cos(lat2Rad);
+  const x =
+    Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+    Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  return (brng + 360) % 360;
+};
+
 function WargaDashboard() {
+  const [heading, setHeading] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [routeParams, setRouteParams] = useState<RouteRequestInput | null>(
     null,
@@ -68,6 +83,12 @@ function WargaDashboard() {
   const [isNavigating, setIsNavigating] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Report | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0);
+
+  // Reset selected route index when route parameters change
+  useEffect(() => {
+    setSelectedRouteIndex(0);
+  }, [routeParams]);
 
   // Real coordinates state (starts at Mejayan center)
   const [currentCoord, setCurrentCoord] = useState<{
@@ -197,7 +218,15 @@ function WargaDashboard() {
             (pos) => {
               if (!isMounted) return;
               const { latitude, longitude } = pos.coords;
-              setCurrentCoord({ lat: latitude, lng: longitude });
+              setCurrentCoord((prev) => {
+                if (prev.lat !== latitude || prev.lng !== longitude) {
+                  const newHeading = calculateBearing(prev.lat, prev.lng, latitude, longitude);
+                  if (Math.abs(latitude - prev.lat) > 0.00001 || Math.abs(longitude - prev.lng) > 0.00001) {
+                    setHeading(newHeading);
+                  }
+                }
+                return { lat: latitude, lng: longitude };
+              });
 
               // Send location updates to the SignalR LocationHub in the background
               locationHubService
@@ -234,12 +263,34 @@ function WargaDashboard() {
     };
   }, []);
 
-  // Synchronize GPS marker when coordinates change
+  // Synchronize GPS marker when coordinates, heading, or navigation state changes
   useEffect(() => {
     if (mapInstanceRef.current && gpsMarkerRef.current) {
       gpsMarkerRef.current.setLatLng([currentCoord.lat, currentCoord.lng]);
+
+      const newIcon = L.divIcon({
+        className: "custom-gps-dot",
+        html: isNavigating
+          ? `
+            <div class="relative flex items-center justify-center w-8 h-8" style="transform: rotate(${heading}deg); transition: transform 0.25s ease-out-in;">
+              <div class="absolute w-8 h-8 bg-emerald-500/30 rounded-full animate-ping" style="animation-duration: 2.5s;"></div>
+              <svg class="w-6 h-6 text-emerald-500 drop-shadow-[0_2px_5px_rgba(16,185,129,0.5)]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+              </svg>
+            </div>
+          `
+          : `
+            <div class="relative flex items-center justify-center w-6 h-6">
+              <div class="absolute w-6 h-6 bg-emerald-500/35 rounded-full animate-ping" style="animation-duration: 2s;"></div>
+              <div class="relative w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+            </div>
+          `,
+        iconSize: isNavigating ? [32, 32] : [24, 24],
+        iconAnchor: isNavigating ? [16, 16] : [12, 12],
+      });
+      gpsMarkerRef.current.setIcon(newIcon);
     }
-  }, [currentCoord]);
+  }, [currentCoord, isNavigating, heading]);
 
   // Synchronize dynamic incident markers on the map
   useEffect(() => {
@@ -382,14 +433,6 @@ function WargaDashboard() {
     if (endMarkerRef.current) map.removeLayer(endMarkerRef.current);
 
     if (routeParams) {
-      // Add start marker
-      startMarkerRef.current = L.marker([
-        routeParams.startLat,
-        routeParams.startLng,
-      ])
-        .addTo(map)
-        .bindPopup("Titik Mulai");
-
       // Add end marker
       endMarkerRef.current = L.marker([routeParams.endLat, routeParams.endLng])
         .addTo(map)
@@ -405,66 +448,117 @@ function WargaDashboard() {
     }
 
     if (routes && routes.length > 0) {
-      const selectedRoute = routes[0]; // Display safest route as primary
-      const latLngs = selectedRoute.geometry.coordinates.map(
-        ([lng, lat]) => [lat, lng] as [number, number],
-      );
-
-      // Map dynamic backend reports to hazards list for segment styling
-      const hazards = (incidentReports || []).map((incident) => {
-        let color = "#64748b"; // default other
-        if (incident.category === "crime") color = "#ef4444";
-        else if (incident.category === "accident") color = "#f43f5e";
-        else if (incident.category === "hazard") color = "#f59e0b";
-        else if (incident.category === "natural_disaster") color = "#f97316";
-
-        return {
-          lat: incident.location.latitude,
-          lng: incident.location.longitude,
-          color,
-          name: incident.title,
-        };
-      });
-
       const group = L.featureGroup();
 
-      for (let i = 0; i < latLngs.length - 1; i++) {
-        const pt1 = latLngs[i];
-        const pt2 = latLngs[i + 1];
+      routes.forEach((route, idx) => {
+        const isSelected = idx === selectedRouteIndex;
+        const latLngs = route.geometry.coordinates.map(
+          ([lng, lat]) => [lat, lng] as [number, number],
+        );
 
-        // Midpoint of the segment
-        const midLat = (pt1[0] + pt2[0]) / 2;
-        const midLng = (pt1[1] + pt2[1]) / 2;
+        if (isSelected) {
+          // Map dynamic backend reports to hazards list for segment styling
+          const hazards = (incidentReports || []).map((incident) => {
+            let color = "#64748b"; // default other
+            if (incident.category === "crime") color = "#ef4444";
+            else if (incident.category === "accident") color = "#f43f5e";
+            else if (incident.category === "hazard") color = "#f59e0b";
+            else if (incident.category === "natural_disaster")
+              color = "#f97316";
 
-        let segmentColor = "#10b981"; // default safe emerald green
-        let minDistance = 999999;
+            return {
+              lat: incident.location.latitude,
+              lng: incident.location.longitude,
+              color,
+              name: incident.title,
+            };
+          });
 
-        // Check proximity to any of the hazard coordinates
-        for (const hz of hazards) {
-          const distance = Math.sqrt(
-            Math.pow(midLat - hz.lat, 2) + Math.pow(midLng - hz.lng, 2),
-          );
-          // 0.004 degrees is approx 450 meters
-          if (distance < 0.004 && distance < minDistance) {
-            minDistance = distance;
-            segmentColor = hz.color;
+          for (let i = 0; i < latLngs.length - 1; i++) {
+            const pt1 = latLngs[i];
+            const pt2 = latLngs[i + 1];
+
+            // Midpoint of the segment
+            const midLat = (pt1[0] + pt2[0]) / 2;
+            const midLng = (pt1[1] + pt2[1]) / 2;
+
+            let segmentColor = "#10b981"; // default safe emerald green
+            let minDistance = 999999;
+
+            // Check proximity to any of the hazard coordinates
+            for (const hz of hazards) {
+              const distance = Math.sqrt(
+                Math.pow(midLat - hz.lat, 2) + Math.pow(midLng - hz.lng, 2),
+              );
+              // 0.004 degrees is approx 450 meters
+              if (distance < 0.004 && distance < minDistance) {
+                minDistance = distance;
+                segmentColor = hz.color;
+              }
+            }
+
+            L.polyline([pt1, pt2], {
+              color: segmentColor,
+              weight: 7,
+              opacity: 0.95,
+              lineJoin: "round",
+            }).addTo(group);
           }
+        } else {
+          // Draw unselected route in "hijau keputihan" (light pale/whitish green)
+          L.polyline(latLngs, {
+            color: "#a7f3d0", // Whitish green
+            weight: 6,
+            opacity: 0.6,
+            lineJoin: "round",
+          }).addTo(group);
         }
-
-        L.polyline([pt1, pt2], {
-          color: segmentColor,
-          weight: 7,
-          opacity: 0.95,
-          lineJoin: "round",
-        }).addTo(group);
-      }
+      });
 
       group.addTo(map);
       polylineRef.current = group;
 
-      map.fitBounds(group.getBounds(), { padding: [50, 50] });
+      // Fit bounds to active route
+      const activeRoute = routes[selectedRouteIndex] || routes[0];
+      const activeLatLngs = activeRoute.geometry.coordinates.map(
+        ([lng, lat]) => [lat, lng] as [number, number],
+      );
+      const bounds = L.latLngBounds(activeLatLngs);
+      map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [routeParams, routes, incidentReports]);
+  }, [routeParams, routes, incidentReports, selectedRouteIndex]);
+
+  // Check if user is off-route and auto-recalculate
+  useEffect(() => {
+    if (!isNavigating || !routeParams || !routes || routes.length === 0) return;
+
+    const activeRoute = routes[selectedRouteIndex] || routes[0];
+    const coords = activeRoute.geometry.coordinates; // [[lng, lat], ...]
+    if (coords.length === 0) return;
+
+    // Find the minimum distance (in degrees) to any coordinate along the route
+    let minDistance = 999999;
+    for (let i = 0; i < coords.length; i++) {
+      const [lng, lat] = coords[i];
+      const dist = Math.sqrt(
+        Math.pow(currentCoord.lat - lat, 2) + Math.pow(currentCoord.lng - lng, 2),
+      );
+      if (dist < minDistance) {
+        minDistance = dist;
+      }
+    }
+
+    // 0.0008 degrees is approximately 90 meters
+    if (minDistance > 0.0008) {
+      console.warn("User is off-route. Auto-recalculating safety route...");
+      setRouteParams({
+        startLat: currentCoord.lat,
+        startLng: currentCoord.lng,
+        endLat: routeParams.endLat,
+        endLng: routeParams.endLng,
+      });
+    }
+  }, [currentCoord, isNavigating, routeParams, routes, selectedRouteIndex]);
 
   // Handle Search Submission
   const handleSearchSubmit = async (e: React.FormEvent) => {
@@ -582,6 +676,8 @@ function WargaDashboard() {
       {!geocodingLoading && !isNavigating && (
         <RouteDrawer
           routes={routes}
+          selectedRouteIndex={selectedRouteIndex}
+          onSelectRouteIndex={setSelectedRouteIndex}
           onClear={() => {
             setRouteParams(null);
             setSearchQuery("");
@@ -604,16 +700,13 @@ function WargaDashboard() {
                   Navigasi Aktif
                 </span>
                 <span className="text-sm font-black text-slate-800">
-                  Menuju Lokasi Tujuan
+                  Menuju Lokasi
                 </span>
               </div>
             </div>
             <div className="text-right">
               <span className="text-xs font-black text-emerald-600 block">
                 18 Menit • 6.5 Km
-              </span>
-              <span className="text-[9px] text-slate-400 font-bold">
-                Rute Aman Terkomputerisasi
               </span>
             </div>
           </div>
@@ -626,7 +719,7 @@ function WargaDashboard() {
               onClick={handleStopNavigation}
               className="w-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl active:scale-95 transition-all text-sm"
             >
-              Selesai Navigasi
+              Selesai
             </button>
           </div>
         </div>

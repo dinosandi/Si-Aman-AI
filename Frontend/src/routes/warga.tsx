@@ -1,13 +1,5 @@
-import {
-  createFileRoute,
-  Outlet,
-  useLocation,
-} from "@tanstack/react-router";
-import {
-  Wifi,
-  WifiOff,
-  LogOut,
-} from "lucide-react";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
+import { Wifi, WifiOff, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSyncOfflineReports } from "../use-cases/hooks/useReports";
 import { useAuth } from "../use-cases/hooks/useAuth";
@@ -84,7 +76,8 @@ function WargaLayout() {
     );
   }
 
-  const isDashboard = location.pathname === "/warga" || location.pathname === "/warga/";
+  const isDashboard =
+    location.pathname === "/warga" || location.pathname === "/warga/";
 
   return (
     <div className="flex-1 bg-slate-100 flex justify-center items-center min-h-screen">
@@ -95,16 +88,13 @@ function WargaLayout() {
           <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md px-4 py-3 flex justify-between items-center border-b border-slate-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-2">
               <span className="font-black text-slate-800 text-sm tracking-wide">
-                SI AMAN Warga
-              </span>
-              <span className="bg-emerald-500/10 text-emerald-600 text-[8px] uppercase font-black px-1.5 py-0.5 rounded border border-emerald-400/20 shadow-sm">
-                PWA
+                SI AMAN
               </span>
             </div>
 
             {/* Connection Indicator & Logout */}
             <div className="flex items-center gap-2.5">
-              {isOnline ? (
+              {/* {isOnline ? (
                 <div className="flex items-center gap-0.5 text-emerald-700 text-[10px] bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-full font-bold">
                   <Wifi className="w-3 h-3" />
                   <span>Online</span>
@@ -114,7 +104,7 @@ function WargaLayout() {
                   <WifiOff className="w-3 h-3" />
                   <span>Offline</span>
                 </div>
-              )}
+              )} */}
               <button
                 onClick={handleLogout}
                 title="Logout"
@@ -134,7 +124,9 @@ function WargaLayout() {
         )}
 
         {/* Content Area */}
-        <div className={`flex-1 flex flex-col relative w-full ${isDashboard ? "h-full overflow-hidden" : "pb-24 overflow-y-auto bg-slate-50"}`}>
+        <div
+          className={`flex-1 flex flex-col relative w-full ${isDashboard ? "h-full overflow-hidden" : "pb-24 overflow-y-auto bg-slate-50"}`}
+        >
           <Outlet />
         </div>
 
@@ -194,7 +186,8 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
       onLoginSuccess();
     } catch (err: any) {
       setErrorMsg(
-        err.message || "Email atau kata sandi salah. (Default: warga@siaman.id / password123)"
+        err.message ||
+          "Email atau kata sandi salah. (Default: warga@siaman.id / password123)",
       );
     }
   };
@@ -222,7 +215,9 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         });
         onLoginSuccess();
       } catch (loginErr: any) {
-        setErrorMsg("Gagal melakukan Google Sign In. Silakan mendaftar secara manual.");
+        setErrorMsg(
+          "Gagal melakukan Google Sign In. Silakan mendaftar secara manual.",
+        );
       }
     }
   };
