@@ -81,6 +81,13 @@ namespace SiAman.Infrastructure.Repositories
             return user;
         }
 
+        public async Task<UserHomeLocations?> GetUserHomeLocationAsync(Guid userId)
+        {
+            return await _context.UserHomeLocations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+        }
+
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();

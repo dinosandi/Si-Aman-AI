@@ -40,6 +40,7 @@ namespace SiAman.Domain.Entities
         public DateTimeOffset UpdatedAt { get; set; }
 
         // Navigation properties
+        public ICollection<IncidentsVote> IncidentVotes { get; set; }  = new List<IncidentsVote>();
         public ICollection<UserHomeLocations> HomeLocations { get; set; } = new List<UserHomeLocations>();
         public ICollection<UserLocations?> Locations { get; set; } = new List<UserLocations>();
         public ICollection<RefreshTokens> RefreshTokens { get; set; } = new List<RefreshTokens>();

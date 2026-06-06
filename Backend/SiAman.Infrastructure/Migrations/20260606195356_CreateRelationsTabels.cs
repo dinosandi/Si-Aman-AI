@@ -259,6 +259,33 @@ namespace SiAman.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "IncidentsVotes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    IncidentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_IncidentsVotes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_IncidentsVotes_incidents_IncidentId",
+                        column: x => x.IncidentId,
+                        principalTable: "incidents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_IncidentsVotes_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_emergency_contacts_UserId",
                 table: "emergency_contacts",
@@ -283,6 +310,16 @@ namespace SiAman.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_incidents_UserId",
                 table: "incidents",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_IncidentsVotes_IncidentId",
+                table: "IncidentsVotes",
+                column: "IncidentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_IncidentsVotes_UserId",
+                table: "IncidentsVotes",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -339,7 +376,7 @@ namespace SiAman.Infrastructure.Migrations
                 name: "EmergencyLocations");
 
             migrationBuilder.DropTable(
-                name: "incidents");
+                name: "IncidentsVotes");
 
             migrationBuilder.DropTable(
                 name: "refresh_tokens");
@@ -358,6 +395,9 @@ namespace SiAman.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "EmergencyAlerts");
+
+            migrationBuilder.DropTable(
+                name: "incidents");
 
             migrationBuilder.DropTable(
                 name: "users");

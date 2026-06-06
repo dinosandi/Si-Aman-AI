@@ -17,13 +17,16 @@ namespace SiAman.Domain.Entities
         public string? LocationDescription { get; set; }
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
-        public StatusIncidents Status { get; set; } = default!; 
+        public StatusIncidents Status { get; set; } = default!;
         public Point Geom { get; set; } = default!; // Kolom Geometry untuk penyimpanan spasial (SRID 4326)
         public DateTimeOffset ReportedAt { get; set; }
         public DateTimeOffset? ResolvedAt { get; set; }
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public ICollection<IncidentsVote> Votes { get; set; } = new List<IncidentsVote>();
+        
     }
 }
 

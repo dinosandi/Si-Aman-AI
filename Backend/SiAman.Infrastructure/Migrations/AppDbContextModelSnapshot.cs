@@ -186,6 +186,33 @@ namespace SiAman.Infrastructure.Migrations
                     b.ToTable("incidents", (string)null);
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.IncidentsVote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("IncidentsVotes");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.RefreshTokens", b =>
                 {
                     b.Property<Guid>("Id")
@@ -516,6 +543,25 @@ namespace SiAman.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.IncidentsVote", b =>
+                {
+                    b.HasOne("SiAman.Domain.Entities.Incidents", "Incident")
+                        .WithMany("Votes")
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SiAman.Domain.Entities.Users", "User")
+                        .WithMany("IncidentVotes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Incident");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.RefreshTokens", b =>
                 {
                     b.HasOne("SiAman.Domain.Entities.Users", "User")
@@ -565,11 +611,18 @@ namespace SiAman.Infrastructure.Migrations
                     b.Navigation("Locations");
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.Incidents", b =>
+                {
+                    b.Navigation("Votes");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.Users", b =>
                 {
                     b.Navigation("EmergencyContacts");
 
                     b.Navigation("HomeLocations");
+
+                    b.Navigation("IncidentVotes");
 
                     b.Navigation("Locations");
 

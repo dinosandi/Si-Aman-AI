@@ -187,6 +187,7 @@ builder.Services.AddScoped<IEmergencyRepository, EmergencyRepository>();
 builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
 
 builder.Services.AddScoped<IOsmDataProvider, OsmDataProvider>();
+builder.Services.AddScoped<IIncidentNotifier,IncidentNotifier>();
 
 builder.Services.AddScoped<IRoadSafetyRepository, RoadSafetyRepository>();
 builder.Services.AddScoped<ISafetyScoreService, SafetyScoreService>();
@@ -214,6 +215,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<LocationHub>("/hubs/location");
 app.MapHub<SosHub>("/hubs/sos");
+app.MapHub<IncidentHub>("/hubs/incidents");
 
 app.UseStaticFiles();
 

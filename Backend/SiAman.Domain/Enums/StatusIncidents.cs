@@ -9,8 +9,6 @@ namespace SiAman.Domain.Enums
         Terverifikasi, 
         Ditolak, 
         Berhasil 
-
-
     }
 }
 

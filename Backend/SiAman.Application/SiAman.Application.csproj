@@ -39,6 +39,7 @@
     <Folder Include="Features\Incidents\" />
     <Folder Include="Features\Incidents\Commands\" />
     <Folder Include="Features\Incidents\Commands\CreateIncident\" />
+    <Folder Include="Features\Incidents\Commands\VoteIncident\" />
     <Folder Include="Features\Incidents\DTOs\" />
     <Folder Include="Features\Incidents\Queries\" />
     <Folder Include="Features\Location\" />

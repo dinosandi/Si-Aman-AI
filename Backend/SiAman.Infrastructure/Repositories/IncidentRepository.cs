@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using SiAman.Application.Common.Interfaces.Repository;
 using SiAman.Domain.Entities;
+using SiAman.Domain.Enums;
 using SiAman.Infrastructure.Persistence;
 
 
@@ -75,6 +76,36 @@ namespace SiAman.Infrastructure.Repositories
         ")
                 .ToListAsync();
         }
+
+        public async Task<bool> HasUserVotedAsync(Guid incidentId, Guid userId)
+        {
+            return await _context.IncidentsVotes
+                .AnyAsync(x =>
+                    x.IncidentId == incidentId &&
+                    x.UserId == userId);
+        }
+        public async Task AddVoteAsync(IncidentsVote vote)
+        {
+            await _context.IncidentsVotes
+                .AddAsync(vote);
+        }
+        public async Task<int> CountVotesAsync(Guid incidentId, TypeVote type)
+        {
+            return await _context.IncidentsVotes
+                .CountAsync(x =>
+                    x.IncidentId == incidentId &&
+                    x.Type == type);
+        }
+        public async Task SaveChangesAsync()
+
+        {
+
+            await _context.SaveChangesAsync();
+
+        }
+    
+
+
 
     }
 }

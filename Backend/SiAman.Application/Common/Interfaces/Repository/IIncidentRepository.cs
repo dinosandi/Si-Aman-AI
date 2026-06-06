@@ -1,4 +1,5 @@
 using SiAman.Domain.Entities;
+using SiAman.Domain.Enums;
 
 
 namespace SiAman.Application.Common.Interfaces.Repository
@@ -15,8 +16,15 @@ namespace SiAman.Application.Common.Interfaces.Repository
         NetTopologySuite.Geometries.Geometry routeGeometry,
 
         double bufferDistance);
-        
+
+        Task<bool> HasUserVotedAsync(Guid incidentId, Guid userId);
+
+        Task AddVoteAsync(IncidentsVote vote);
+
+        Task<int> CountVotesAsync(Guid incidentId, TypeVote type);
         Task<List<Incidents>> GetAllIncidentsAsync(CancellationToken ct = default);
+        Task SaveChangesAsync();
+
     }
 
 }

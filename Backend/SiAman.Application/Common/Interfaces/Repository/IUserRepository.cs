@@ -11,6 +11,8 @@ namespace SiAman.Application.Common.Interfaces.Repository
         Task<Users> GetUsersAsync(string email, string name);
         Task<Users> UpdateAsync(Guid userId, CancellationToken ct = default);
         Task AddUserAsync(Users user);
+        Task<UserHomeLocations?> GetUserHomeLocationAsync(
+    Guid userId);
         Task SaveChangesAsync();
     }
 }

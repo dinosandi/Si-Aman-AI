@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SiAman.Application.Features.Incidents.Commands.CreateIncident;
+using SiAman.Application.Features.Incidents.Commands.VoteIncident;
 using SiAman.Application.Features.Incidents.DTOs;
 using SiAman.Application.Features.Incidents.Queries;
 
@@ -18,6 +19,23 @@ namespace SiAman.API.Controller
         {
             _mediator = mediator;
         }
+
+        [HttpPost("{id}/vote")]
+        public async Task<IActionResult> Vote(
+    Guid id,
+    [FromBody] IncidentVoteDto dto)
+        {
+            var command = new VoteIncidentCommand
+            {
+                IncidentId = id,
+                Type = dto.Type
+            };
+
+            var result = await _mediator.Send(command);
+
+            return Ok(result);
+        }
+
 
 
         [HttpPost]

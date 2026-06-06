@@ -16,10 +16,14 @@ namespace SiAman.Infrastructure.Persistence
         public DbSet<EmergencyContacts> EmergencyContacts => Set<EmergencyContacts>();
         public DbSet<SafeRoutes> SafeRoutes => Set<SafeRoutes>();
         public DbSet<RoadSafetySegments> RoadSafetySegments { get; set; }
-        public DbSet<Incidents> Incidents => Set<Incidents>();
+        // Removed duplicate definition of Incidents
         public DbSet<UserHomeLocations> UserHomeLocations => Set<UserHomeLocations>();
-        public DbSet<EmergencyAlerts>    EmergencyAlerts    => Set<EmergencyAlerts>();
+        public DbSet<EmergencyAlerts> EmergencyAlerts => Set<EmergencyAlerts>();
         public DbSet<EmergencyLocations> EmergencyLocations => Set<EmergencyLocations>();
+
+        public DbSet<Incidents> Incidents { get; set; }
+
+        public DbSet<IncidentsVote> IncidentsVotes { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
