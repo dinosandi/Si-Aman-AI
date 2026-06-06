@@ -2,7 +2,7 @@ using SiAman.Domain.Enums;
 
 namespace SiAman.Application.Features.Incidents.DTOs;
 
-public class IncidentResponseDto
+public record IncidentResponseDto
 {
     public Guid Id { get; set; }
     public string ReporterName { get; set; } = string.Empty;
@@ -15,4 +15,7 @@ public class IncidentResponseDto
     public string ImageUrl { get; set; } = string.Empty;
     public StatusIncidents Status { get; set; }
     public DateTimeOffset ReportedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
+    public DateTimeOffset? ResolvedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 }

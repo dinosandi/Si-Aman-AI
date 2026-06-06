@@ -11,6 +11,7 @@
     <PackageReference Include="MediatR" Version="14.1.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.7" />
     <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
@@ -27,6 +28,14 @@
     <Folder Include="Features\Auth\DTOs\" />
     <Folder Include="Features\Auth\Queries\" />
     <Folder Include="Features\Auth\Queries\GetCurrentUser\" />
+    <Folder Include="Features\Emergency\" />
+    <Folder Include="Features\Emergency\Commands\" />
+    <Folder Include="Features\Emergency\Commands\ResolveSos\" />
+    <Folder Include="Features\Emergency\Commands\TriggerSos\" />
+    <Folder Include="Features\Emergency\Commands\UpdateSosLocation\" />
+    <Folder Include="Features\Emergency\DTOs\" />
+    <Folder Include="Features\Emergency\Queries\" />
+    <Folder Include="Features\Emergency\Queries\GetActiveAlerts\" />
     <Folder Include="Features\Incidents\" />
     <Folder Include="Features\Incidents\Commands\" />
     <Folder Include="Features\Incidents\Commands\CreateIncident\" />

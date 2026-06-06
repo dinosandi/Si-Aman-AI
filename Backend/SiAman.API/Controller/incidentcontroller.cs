@@ -57,6 +57,15 @@ namespace SiAman.API.Controller
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        // mengambil semua laporan insiden
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var query = new GetAllIncidentsQuery();
+            var result = await _mediator.Send(query);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         
         /// Detail satu laporan
         [HttpGet("{id:guid}")]

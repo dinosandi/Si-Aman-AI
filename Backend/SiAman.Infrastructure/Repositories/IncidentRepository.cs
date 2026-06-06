@@ -48,6 +48,14 @@ namespace SiAman.Infrastructure.Repositories
                 .FirstOrDefaultAsync(i => i.Id == id, ct);
         }
 
+        public async Task<List<Incidents>> GetAllIncidentsAsync(CancellationToken ct = default)
+        {
+            return await _context.Incidents
+                .AsNoTracking()
+                .OrderByDescending(i => i.ReportedAt)
+                .ToListAsync(ct);
+        }
+
         public async Task<List<Incidents>> GetNearbyIncidentsAlongRouteAsync(
             Geometry routeGeometry,
             double bufferDistance)

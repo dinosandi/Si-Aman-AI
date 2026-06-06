@@ -56,8 +56,8 @@ namespace SiAman.Infrastructure.Migrations
                     CurrentLatitude = table.Column<double>(type: "double precision", nullable: true),
                     CurrentLongitude = table.Column<double>(type: "double precision", nullable: true),
                     LastLocationUpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
@@ -74,13 +74,34 @@ namespace SiAman.Infrastructure.Migrations
                     ContactPhone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Relationship = table.Column<string>(type: "text", nullable: true),
                     IsPrimary = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_emergency_contacts", x => x.Id);
                     table.ForeignKey(
                         name: "FK_emergency_contacts_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EmergencyAlerts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    TriggeredAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ReslolvedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmergencyAlerts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EmergencyAlerts_users_UserId",
                         column: x => x.UserId,
                         principalTable: "users",
                         principalColumn: "Id",
@@ -104,8 +125,8 @@ namespace SiAman.Infrastructure.Migrations
                     Geom = table.Column<Point>(type: "geometry(Point, 4326)", nullable: false),
                     ReportedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
                     ResolvedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>
                 {
@@ -155,7 +176,7 @@ namespace SiAman.Infrastructure.Migrations
                     DestinationLongitude = table.Column<double>(type: "double precision", nullable: false),
                     RouteGeom = table.Column<Geometry>(type: "geometry", nullable: false),
                     AvarageSafetyScore = table.Column<float>(type: "real", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -217,10 +238,41 @@ namespace SiAman.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "EmergencyLocations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AlertId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: false),
+                    Longitude = table.Column<double>(type: "double precision", nullable: false),
+                    RecordedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmergencyLocations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EmergencyLocations_EmergencyAlerts_AlertId",
+                        column: x => x.AlertId,
+                        principalTable: "EmergencyAlerts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_emergency_contacts_UserId",
                 table: "emergency_contacts",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmergencyAlerts_UserId",
+                table: "EmergencyAlerts",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmergencyLocations_AlertId",
+                table: "EmergencyLocations",
+                column: "AlertId");
 
             migrationBuilder.CreateIndex(
                 name: "idx_incidents_geom",
@@ -284,6 +336,9 @@ namespace SiAman.Infrastructure.Migrations
                 name: "emergency_contacts");
 
             migrationBuilder.DropTable(
+                name: "EmergencyLocations");
+
+            migrationBuilder.DropTable(
                 name: "incidents");
 
             migrationBuilder.DropTable(
@@ -300,6 +355,9 @@ namespace SiAman.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserHomeLocations");
+
+            migrationBuilder.DropTable(
+                name: "EmergencyAlerts");
 
             migrationBuilder.DropTable(
                 name: "users");

@@ -14,7 +14,7 @@ namespace SiAman.Domain.Entities
         public string? Relationship { get; set; }  // "Ibu", "Ayah", "Teman"
         public bool IsPrimary { get; set; } = false;
 
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
     }
 
 }

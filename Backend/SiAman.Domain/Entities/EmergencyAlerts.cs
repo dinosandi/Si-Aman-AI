@@ -12,6 +12,8 @@ namespace SiAman.Domain.Entities
         public DateTimeOffset TriggeredAt { get; set; }
         public DateTimeOffset? ReslolvedAt { get; set; }
 
+        public ICollection<EmergencyLocations> Locations { get; set; } = new List<EmergencyLocations>();
+
     }
 
 }

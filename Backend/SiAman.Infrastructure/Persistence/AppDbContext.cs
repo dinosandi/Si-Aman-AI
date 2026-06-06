@@ -18,7 +18,8 @@ namespace SiAman.Infrastructure.Persistence
         public DbSet<RoadSafetySegments> RoadSafetySegments { get; set; }
         public DbSet<Incidents> Incidents => Set<Incidents>();
         public DbSet<UserHomeLocations> UserHomeLocations => Set<UserHomeLocations>();
-
+        public DbSet<EmergencyAlerts>    EmergencyAlerts    => Set<EmergencyAlerts>();
+        public DbSet<EmergencyLocations> EmergencyLocations => Set<EmergencyLocations>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -7,7 +7,7 @@ using SiAman.Application.Features.Location.Commands;
 namespace SiAman.API.Hubs
 {
 
- [Authorize]
+ 
     public class LocationHub : Hub
     {
         private readonly IMediator _mediator;

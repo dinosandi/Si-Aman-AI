@@ -14,7 +14,7 @@ namespace SiAman.Domain.Entities
         public double DestinationLongitude { get; set; }
         public Geometry RouteGeom { get; set; }
         public float AvarageSafetyScore { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
 
     }
 }

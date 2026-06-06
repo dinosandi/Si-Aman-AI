@@ -13,7 +13,7 @@ using SiAman.Infrastructure.Persistence;
 namespace SiAman.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260604144514_CreateRelationsTabels")]
+    [Migration("20260606112932_CreateRelationsTabels")]
     partial class CreateRelationsTabels
     {
         /// <inheritdoc />
@@ -27,6 +27,31 @@ namespace SiAman.Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "uuid-ossp");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("SiAman.Domain.Entities.EmergencyAlerts", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReslolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("TriggeredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EmergencyAlerts");
+                });
 
             modelBuilder.Entity("SiAman.Domain.Entities.EmergencyContacts", b =>
                 {
@@ -45,7 +70,7 @@ namespace SiAman.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -66,6 +91,31 @@ namespace SiAman.Infrastructure.Migrations
                     b.ToTable("emergency_contacts", (string)null);
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.EmergencyLocations", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AlertId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlertId");
+
+                    b.ToTable("EmergencyLocations");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.Incidents", b =>
                 {
                     b.Property<Guid>("Id")
@@ -73,7 +123,7 @@ namespace SiAman.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("uuid_generate_v4()");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -119,7 +169,7 @@ namespace SiAman.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -226,7 +276,7 @@ namespace SiAman.Infrastructure.Migrations
                     b.Property<float>("AvarageSafetyScore")
                         .HasColumnType("real");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<double>("DestinationLatitude")
@@ -350,7 +400,7 @@ namespace SiAman.Infrastructure.Migrations
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -407,7 +457,7 @@ namespace SiAman.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("now()");
@@ -425,6 +475,17 @@ namespace SiAman.Infrastructure.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("SiAman.Domain.Entities.EmergencyAlerts", b =>
+                {
+                    b.HasOne("SiAman.Domain.Entities.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SiAman.Domain.Entities.EmergencyContacts", b =>
                 {
                     b.HasOne("SiAman.Domain.Entities.Users", "User")
@@ -434,6 +495,17 @@ namespace SiAman.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SiAman.Domain.Entities.EmergencyLocations", b =>
+                {
+                    b.HasOne("SiAman.Domain.Entities.EmergencyAlerts", "Alert")
+                        .WithMany("Locations")
+                        .HasForeignKey("AlertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Alert");
                 });
 
             modelBuilder.Entity("SiAman.Domain.Entities.Incidents", b =>
@@ -489,6 +561,11 @@ namespace SiAman.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SiAman.Domain.Entities.EmergencyAlerts", b =>
+                {
+                    b.Navigation("Locations");
                 });
 
             modelBuilder.Entity("SiAman.Domain.Entities.Users", b =>

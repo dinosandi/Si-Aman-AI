@@ -7,8 +7,8 @@ namespace SiAman.Domain.Entities
         public Guid Id { get; set; }
         public Guid AlertId { get; set; }
         public EmergencyAlerts Alert { get; set; } = default!;
-        public string Latitude { get; set; } = default!;
-        public string Longitude { get; set; } = default!;
+        public double Latitude { get; set; } = default!;
+        public double Longitude { get; set; } = default!;
         public DateTimeOffset RecordedAt { get; set; }
 
     }

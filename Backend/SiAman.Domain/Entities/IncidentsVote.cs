@@ -10,9 +10,8 @@ namespace SiAman.Domain.Entities
         public Users User { get; set; }
         public Guid IncidentId { get; set; }
         public Incidents Incident { get; set; }
-
         public TypeVote Type { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }
 

@@ -16,6 +16,7 @@ using SiAman.API.Middleware;
 using SiAman.Application;
 using SiAman.API.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using SiAman.API.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -180,6 +181,9 @@ builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+builder.Services.AddScoped<IEmergencyNotifier, EmergencyNotifier>();
+builder.Services.AddScoped<IEmergencyRepository, EmergencyRepository>();
+
 builder.Services.AddScoped<IUserLocationRepository, UserLocationRepository>();
 
 builder.Services.AddScoped<IOsmDataProvider, OsmDataProvider>();
@@ -209,6 +213,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<LocationHub>("/hubs/location");
+app.MapHub<SosHub>("/hubs/sos");
 
 app.UseStaticFiles();
 
