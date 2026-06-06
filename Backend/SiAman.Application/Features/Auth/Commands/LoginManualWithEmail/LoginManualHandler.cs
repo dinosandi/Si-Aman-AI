@@ -59,6 +59,7 @@ public class LoginManualHandler
         _cookieService.SetAccessToken(accessToken);
         _cookieService.SetRefreshToken(refreshToken.TokenRaw);
 
+         await _userService.UpdateLoginStatusAsync(user.Id, cancellationToken);
         return ApiResponse<AuthResponse>.SuccessResponse(
             new AuthResponse
             {

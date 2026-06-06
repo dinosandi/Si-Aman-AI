@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
@@ -10,52 +11,114 @@ namespace SiAman.Infrastructure.Services
     {
         private readonly HttpClient _httpClient;
 
-        // Inject IHttpClientFactory atau HttpClient via DI
         public OsrmRouteProvider(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
+        
         public async Task<RouteResult> GetSafeRouteAsync(
-            double originLat,
-            double originLng,
-            double destinationLat,
-            double destinationLng)
+            double originLat, double originLng,
+            double destinationLat, double destinationLng)
         {
-            // Format: /route/v1/driving/{lon},{lat};{lon},{lat}
-            var url = $"route/v1/driving/" +
-                      $"{originLng.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
-                      $"{originLat.ToString(System.Globalization.CultureInfo.InvariantCulture)};" +
-                      $"{destinationLng.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
-                      $"{destinationLat.ToString(System.Globalization.CultureInfo.InvariantCulture)}" +
-                      $"?geometries=geojson&overview=full";
-                    
-            Console.WriteLine($"Requesting OSRM route: {url}");
+            var routes = await GetAlternativeRoutesAsync(
+                originLat, originLng,
+                destinationLat, destinationLng,
+                maxAlternatives: 1);
+
+            return routes.FirstOrDefault()
+                ?? throw new InvalidOperationException("OSRM tidak mengembalikan rute");
+        }
+
+        // ── Method baru: ambil beberapa alternatif 
+        public async Task<List<RouteResult>> GetAlternativeRoutesAsync(
+            double originLat,      double originLng,
+            double destinationLat, double destinationLng,
+            int    maxAlternatives = 3)
+        {
+            var url = BuildUrl(originLat, originLng, destinationLat, destinationLng, maxAlternatives);
+
+            Console.WriteLine($"[OSRM] Requesting alternatives: {url}");
 
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
-            var osrmResponse = JsonSerializer.Deserialize<OsrmResponse>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var json          = await response.Content.ReadAsStringAsync();
+            var osrmResponse  = DeserializeOsrmResponse(json);
 
-            var route = osrmResponse?.Routes?.FirstOrDefault()
-                ?? throw new InvalidOperationException("OSRM tidak mengembalikan rute");
+            if (osrmResponse?.Routes is null || osrmResponse.Routes.Count == 0)
+                throw new InvalidOperationException("OSRM tidak mengembalikan rute.");
 
-            // Parse GeoJSON geometry → NTS Geometry (untuk query spasial)
-            var geoJsonReader = new GeoJsonReader();
-            var geometryJson = route.Geometry.ToString() ?? string.Empty;
-            var ntsGeometry = geoJsonReader.Read<Geometry>(geometryJson);
+            var results = new List<RouteResult>();
 
-            return new RouteResult
+            for (int i = 0; i < osrmResponse.Routes.Count; i++)
             {
-                DistanceKm = route.Distance / 1000.0,
-                DurationMinutes = route.Duration / 60.0,
-                GeometryJson = geometryJson,
-                RouteGeometry = ntsGeometry
-            };
+                var route = osrmResponse.Routes[i];
+
+                try
+                {
+                    var (ntsGeometry, geometryJson) = ParseGeometry(route);
+
+                    results.Add(new RouteResult
+                    {
+                        RouteIndex      = i,
+                        RouteName       = i == 0 ? "Rute Utama" : $"Alternatif {i}",
+                        DistanceKm      = route.Distance / 1000.0,
+                        DurationMinutes = route.Duration / 60.0,
+                        GeometryJson    = geometryJson,
+                        RouteGeometry   = ntsGeometry
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // Jika satu rute gagal di-parse, skip dan lanjut
+                    Console.WriteLine($"[OSRM] Skip rute index {i}: {ex.Message}");
+                }
+            }
+
+            if (results.Count == 0)
+                throw new InvalidOperationException("Semua rute gagal di-parse.");
+
+            return results;
         }
 
-    }
+        // ── Helpers ────────────────────────────────────────────────────────
 
+        private static string BuildUrl(
+            double originLat,      double originLng,
+            double destinationLat, double destinationLng,
+            int    maxAlternatives)
+        {
+            // Format koordinat pakai InvariantCulture agar tidak pakai koma desimal
+            string Fmt(double v) => v.ToString(CultureInfo.InvariantCulture);
+
+            var alternatives = maxAlternatives > 1 ? "true" : "false";
+
+            return $"route/v1/driving/" +
+                   $"{Fmt(originLng)},{Fmt(originLat)};" +
+                   $"{Fmt(destinationLng)},{Fmt(destinationLat)}" +
+                   $"?alternatives={alternatives}" +
+                   $"&geometries=geojson" +
+                   $"&overview=full";
+        }
+
+        private static OsrmResponse DeserializeOsrmResponse(string json)
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<OsrmResponse>(json, options)
+                ?? throw new InvalidOperationException("Gagal deserialize respons OSRM.");
+        }
+
+        private static (Geometry ntsGeometry, string geometryJson) ParseGeometry(OsrmRoute route)
+        {
+            
+            var geometryJson = route.Geometry.ToString()
+                ?? throw new InvalidOperationException("Geometry kosong.");
+
+            var geoJsonReader = new GeoJsonReader();
+            var ntsGeometry   = geoJsonReader.Read<Geometry>(geometryJson);
+
+            return (ntsGeometry, geometryJson);
+        }
+    }
 }

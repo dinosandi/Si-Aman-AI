@@ -50,7 +50,7 @@ namespace SiAman.Application.Features.Location.Commands
             user.CurrentLongitude         = request.Longitude;
             user.LastLocationUpdatedAt    = DateTimeOffset.UtcNow;
 
-            await _userRepository.UpdateAsync(user);
+            await _userRepository.UpdateAsync(user.Id, cancellationToken);
 
             // ── 2. Simpan riwayat ke UserLocations 
             var locationHistory = new UserLocations

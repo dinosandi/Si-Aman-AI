@@ -25,6 +25,7 @@ namespace SiAman.Infrastructure.Services
             SafetyScore.Berbahaya => 20.0,
             _ => 50.0
         };
+        
 
         public double Calculate(List<RoadSafetySegments> roadSegments, List<Incidents> incidents)
         {
@@ -38,5 +39,7 @@ namespace SiAman.Infrastructure.Services
 
 
         }
+
+
     }
 }

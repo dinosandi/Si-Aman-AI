@@ -12,6 +12,10 @@ namespace SiAman.Application.Features.Navigation.DTOs
         public string GeometryJson { get; set; } = string.Empty;
 
         public Geometry RouteGeometry { get; set; } = default!;
+
+        public int RouteIndex { get; set; }   // 0 = primary, 1,2 = alternatif
+        public string RouteName { get; set; } = string.Empty;
+    
     }
 
 }

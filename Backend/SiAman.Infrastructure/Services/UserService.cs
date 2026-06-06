@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using SiAman.Application.Common.Exceptions;
+using SiAman.Application.Common.Interfaces.Repository;
 using SiAman.Application.Common.Interfaces.Service;
 using SiAman.Domain.Entities;
 using SiAman.Infrastructure.Persistence;
@@ -8,10 +10,12 @@ namespace SiAman.Infrastructure.Services
     public class UserService : IUserService
     {
         private readonly AppDbContext _context;
+        private readonly IUserRepository _userRepository;
 
-        public UserService(AppDbContext context)
+        public UserService(AppDbContext context, IUserRepository userRepository)
         {
             _context = context;
+            _userRepository = userRepository;
         }
 
         public async Task<Users> GetUsersAsync(string email, string name)
@@ -45,7 +49,23 @@ namespace SiAman.Infrastructure.Services
             .AsNoTracking() // Menambahkan AsNoTracking untuk meningkatkan performa saat hanya membaca data
             .FirstOrDefaultAsync(u => u.Name == Name);
         }
+
+        public async Task UpdateLoginStatusAsync(Guid userId, CancellationToken ct = default)
+        {
+            var user = await _userRepository.GetByIdAsync(userId, ct)
+                ?? throw new NotFoundException("User tidak ditemukan.");
+
+            var now = DateTimeOffset.UtcNow;
+            user.IsOnline = true;
+            user.LastLoginAt = now;
+            user.LastActivityAt = now;
+            user.UpdatedAt = now;
+
+            await _userRepository.UpdateAsync(userId, ct);
+        }
+
+
     }
-    
+
 }
 

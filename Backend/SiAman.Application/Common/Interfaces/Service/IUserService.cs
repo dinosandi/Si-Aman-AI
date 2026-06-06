@@ -8,6 +8,7 @@ namespace SiAman.Application.Common.Interfaces.Service
     Task<Users> GetUserByName(string Name);
     Task<Users> GetUserByEmail(string Email);
     Task<Users> GetUsersAsync(string email, string name);
+    Task UpdateLoginStatusAsync(Guid userId, CancellationToken ct = default);
     }
 }
 

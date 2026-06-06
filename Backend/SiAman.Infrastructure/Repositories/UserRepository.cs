@@ -2,6 +2,7 @@ using SiAman.Domain.Entities;
 using SiAman.Application.Common.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
 using SiAman.Infrastructure.Persistence;
+using SiAman.Application.Common.Exceptions;
 
 
 namespace SiAman.Infrastructure.Repositories
@@ -63,10 +64,20 @@ namespace SiAman.Infrastructure.Repositories
             return user;
         }
 
-        public async Task<Users> UpdateAsync(Users user)
+        public async Task<Users> UpdateAsync(Guid userId, CancellationToken ct = default)
         {
+            var user = await _context.Users.FindAsync(new object[] { userId }, ct)
+                ?? throw new NotFoundException("User tidak ditemukan.");
+
+            var now = DateTimeOffset.UtcNow;
+            user.IsOnline = true;
+            user.LastLoginAt = now;
+            user.LastActivityAt = now;
+            user.UpdatedAt = now;
+
             _context.Users.Update(user);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
+
             return user;
         }
 

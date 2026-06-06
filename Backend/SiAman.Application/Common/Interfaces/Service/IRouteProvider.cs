@@ -9,4 +9,10 @@ public interface IRouteProvider
         double originLng,
         double destinationLat,
         double destinationLng);
+    Task<List<RouteResult>> GetAlternativeRoutesAsync(
+        double originLat,
+        double originLng,
+        double destinationLat,
+        double destinationLng,
+        int    maxAlternatives = 3);
 }
