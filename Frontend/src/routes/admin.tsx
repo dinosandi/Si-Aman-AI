@@ -156,7 +156,14 @@ function AdminLayout() {
 function AdminAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(() => {
+    const flash = localStorage.getItem('auth_flash_message');
+    if (flash) {
+      localStorage.removeItem('auth_flash_message');
+      return flash;
+    }
+    return null;
+  });
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

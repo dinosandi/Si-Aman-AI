@@ -149,7 +149,14 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const [view, setView] = useState<
     "login" | "register" | "complete_google_data"
   >("login");
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(() => {
+    const flash = localStorage.getItem("auth_flash_message");
+    if (flash) {
+      localStorage.removeItem("auth_flash_message");
+      return flash;
+    }
+    return null;
+  });
 
   // Password visibility states
   const [showPassword, setShowPassword] = useState(false);

@@ -25,9 +25,36 @@ httpClient.interceptors.request.use(
   }
 );
 
+const handleUnauthorized = () => {
+  localStorage.removeItem('si_aman_token');
+  localStorage.removeItem('si_aman_user');
+  localStorage.removeItem('warga_authenticated');
+  localStorage.removeItem('admin_authenticated');
+  
+  localStorage.setItem('auth_flash_message', 'Sesi telah habis. Silakan melakukan login ulang untuk melanjutkan.');
+  
+  const currentPath = window.location.pathname;
+  const redirectPath = currentPath.startsWith('/admin') ? '/admin' : '/warga';
+  
+  if (currentPath !== redirectPath) {
+    window.location.href = redirectPath;
+  }
+};
+
 // Response Interceptor
 httpClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    const data = response.data;
+    // Check if the response body indicates 401 unauthorized (success: false with statusCode: 401)
+    if (data && data.success === false && (data.statusCode === 401 || data.status === 401)) {
+      const isAuthRequest = response.config?.url?.endsWith('/auth/login') || response.config?.url?.endsWith('/auth/register');
+      if (!isAuthRequest) {
+        handleUnauthorized();
+      }
+      return Promise.reject(data);
+    }
+    return data;
+  },
   (error: AxiosError) => {
     // Premium global error formatting
     const customError = {
@@ -41,11 +68,12 @@ httpClient.interceptors.response.use(
       const serverMessage = (error.response.data as any)?.message;
       if (serverMessage) customError.message = serverMessage;
       
-      if (error.response.status === 401) {
-        // Handle Unauthorized, redirect or logout
-        localStorage.removeItem('si_aman_token');
-        localStorage.removeItem('si_aman_user');
-        // Optional: trigger redirect to login in presentation layer or router
+      const isAuthRequest = error.config?.url?.endsWith('/auth/login') || error.config?.url?.endsWith('/auth/register');
+
+      if (error.response.status === 401 || (error.response.data as any)?.statusCode === 401) {
+        if (!isAuthRequest) {
+          handleUnauthorized();
+        }
       }
     } else if (error.request) {
       customError.message = 'Koneksi gagal. Periksa koneksi internet Anda (Offline).';
