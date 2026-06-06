@@ -136,7 +136,21 @@ export class ApiIncidentRepository implements IncidentRepository {
     formData.append("Longitude", input.longitude.toString());
     
     if (input.image) {
-      formData.append("Image", input.image);
+      let filename = "image.jpg";
+      if (input.image instanceof File) {
+        filename = input.image.name;
+      }
+      // Ensure the filename has a valid image extension
+      const lowerName = filename.toLowerCase();
+      if (
+        !lowerName.endsWith(".jpg") &&
+        !lowerName.endsWith(".jpeg") &&
+        !lowerName.endsWith(".png") &&
+        !lowerName.endsWith(".webp")
+      ) {
+        filename = `${filename}.jpg`;
+      }
+      formData.append("Image", input.image, filename);
     }
 
     const response = await httpClient.post<any, ApiResponse<IncidentResponseDto>>("/incidents", formData, {

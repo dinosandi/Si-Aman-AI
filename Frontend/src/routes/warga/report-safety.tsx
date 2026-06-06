@@ -1,10 +1,30 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCreateReport } from "../../use-cases/hooks/useReports";
 import type { ReportCategory } from "../../domain/entities/report";
 import { FileText, Compass, CheckCircle, WifiOff, Send } from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix Leaflet marker icons in Vite
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerIconRetina from "leaflet/dist/images/marker-icon-2x.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+const DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIconRetina,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  tooltipAnchor: [16, -28],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 export const Route = createFileRoute("/warga/report-safety")({
   component: WargaReportSafety,
@@ -21,7 +41,7 @@ const reportValidationSchema = z.object({
   ]),
   title: z.string().min(5, "Judul minimal 5 karakter"),
   description: z.string().min(10, "Deskripsi kejadian minimal 10 karakter"),
-  district: z.string().min(3, "Nama kecamatan wajib diisi"),
+  district: z.string().min(3, "Deskripsi lokasi wajib diisi"),
   latitude: z.number({ message: "Latitude wajib diisi" }),
   longitude: z.number({ message: "Longitude wajib diisi" }),
 });
@@ -32,15 +52,20 @@ function WargaReportSafety() {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // Map elements ref
+  const miniMapRef = useRef<HTMLDivElement>(null);
+  const miniMapInstanceRef = useRef<L.Map | null>(null);
+  const markerInstanceRef = useRef<L.Marker | null>(null);
+
   // TanStack Form Setup
   const form = useForm({
     defaultValues: {
       category: "hazard" as ReportCategory,
-      title: "",
+      title: "JalanRusak",
       description: "",
       district: "",
-      latitude: 0,
-      longitude: 0,
+      latitude: -7.6167,
+      longitude: 111.65,
       image: undefined as File | undefined,
     },
     onSubmit: async ({ value }) => {
@@ -54,6 +79,66 @@ function WargaReportSafety() {
       }
     },
   });
+
+  const currentCategory = useStore(
+    form.store,
+    (state) => state.values.category,
+  );
+  const latValue = useStore(form.store, (state) => state.values.latitude);
+  const lngValue = useStore(form.store, (state) => state.values.longitude);
+
+  // Initialize mini map
+  useEffect(() => {
+    if (!miniMapRef.current) return;
+
+    const initialLat = form.state.values.latitude || -7.6167;
+    const initialLng = form.state.values.longitude || 111.65;
+
+    const map = L.map(miniMapRef.current, {
+      zoomControl: true,
+      attributionControl: false,
+    }).setView([initialLat, initialLng], 15);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(
+      map,
+    );
+
+    const marker = L.marker([initialLat, initialLng], {
+      draggable: true,
+    }).addTo(map);
+
+    marker.on("dragend", () => {
+      const latLng = marker.getLatLng();
+      form.setFieldValue("latitude", latLng.lat);
+      form.setFieldValue("longitude", latLng.lng);
+    });
+
+    miniMapInstanceRef.current = map;
+    markerInstanceRef.current = marker;
+
+    map.on("click", (e) => {
+      marker.setLatLng(e.latlng);
+      form.setFieldValue("latitude", e.latlng.lat);
+      form.setFieldValue("longitude", e.latlng.lng);
+    });
+
+    return () => {
+      map.remove();
+      miniMapInstanceRef.current = null;
+      markerInstanceRef.current = null;
+    };
+  }, []);
+
+  // Sync marker position when lat/lng state changes
+  useEffect(() => {
+    if (miniMapInstanceRef.current && markerInstanceRef.current) {
+      const currentLatLng = markerInstanceRef.current.getLatLng();
+      if (currentLatLng.lat !== latValue || currentLatLng.lng !== lngValue) {
+        markerInstanceRef.current.setLatLng([latValue, lngValue]);
+        miniMapInstanceRef.current.setView([latValue, lngValue]);
+      }
+    }
+  }, [latValue, lngValue]);
 
   const acquireGPS = () => {
     setGpsLoading(true);
@@ -150,60 +235,69 @@ function WargaReportSafety() {
                   id={field.name}
                   name={field.name}
                   value={field.state.value}
-                  onChange={(e) =>
-                    field.handleChange(e.target.value as ReportCategory)
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value as ReportCategory;
+                    field.handleChange(val);
+
+                    const autoTitles: Record<string, string> = {
+                      accident: "Kecelakaan",
+                      crime: "Kriminal",
+                      natural_disaster: "BencanaAlam",
+                      hazard: "JalanRusak",
+                    };
+
+                    if (val !== "other") {
+                      form.setFieldValue("title", autoTitles[val] || "Other");
+                    } else {
+                      form.setFieldValue("title", "");
+                    }
+                  }}
                   className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
-                  <option value="hazard">
-                    Bahaya Jalan (Pohon, Kabel, Jalan Rusak)
-                  </option>
-                  <option value="crime">
-                    Tindakan Kriminal (Pencurian, Begal, Sajam)
-                  </option>
-                  <option value="accident">Kecelakaan Lalu Lintas</option>
-                  <option value="natural_disaster">
-                    Bencana Alam (Tanah Longsor, Banjir)
-                  </option>
-                  <option value="road_block">Penutupan Jalan / Hambatan</option>
-                  <option value="other">Kejadian Lainnya</option>
+                  <option value="accident">Kecelakaan</option>
+                  <option value="crime">Kriminal</option>
+                  <option value="natural_disaster">Bencana Alam</option>
+                  <option value="hazard">Jalan Rusak</option>
+                  <option value="other">Lainnya</option>
                 </select>
               </div>
             )}
           </form.Field>
 
-          {/* Title */}
-          <form.Field
-            name="title"
-            validators={{
-              onChange: reportValidationSchema.shape.title,
-            }}
-          >
-            {(field) => (
-              <div className="space-y-1">
-                <label
-                  htmlFor={field.name}
-                  className="text-xs font-bold text-slate-500 block"
-                >
-                  Judul Laporan
-                </label>
-                <input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Misal: Pohon tumbang menutup jalan lingkar"
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-                {field.state.meta.errors && (
-                  <span className="text-[10px] text-red-500 mt-0.5 block px-1">
-                    {field.state.meta.errors.join(", ")}
-                  </span>
-                )}
-              </div>
-            )}
-          </form.Field>
+          {/* Title - Only visible if category is "other" */}
+          {currentCategory === "other" && (
+            <form.Field
+              name="title"
+              validators={{
+                onChange: reportValidationSchema.shape.title,
+              }}
+            >
+              {(field) => (
+                <div className="space-y-1">
+                  <label
+                    htmlFor={field.name}
+                    className="text-xs font-bold text-slate-500 block"
+                  >
+                    Judul Laporan
+                  </label>
+                  <input
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Misal: Pohon tumbang menutup jalan lingkar"
+                    className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                  {field.state.meta.errors && (
+                    <span className="text-[10px] text-red-500 mt-0.5 block px-1">
+                      {field.state.meta.errors.join(", ")}
+                    </span>
+                  )}
+                </div>
+              )}
+            </form.Field>
+          )}
 
           {/* Description */}
           <form.Field
@@ -231,15 +325,15 @@ function WargaReportSafety() {
                   className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
                 {field.state.meta.errors && (
-                  <span className="text-[10px] text-red-500 mt-0.5 block px-1">
-                    {field.state.meta.errors.join(", ")}
+                  <span className="text-[10px] text-red-500 block mt-0.5">
+                    {field.state.meta.errors.map((err: any) => err.message)}
                   </span>
                 )}
               </div>
             )}
           </form.Field>
 
-          {/* District */}
+          {/* District -> Deskripsi Lokasi */}
           <form.Field
             name="district"
             validators={{
@@ -252,7 +346,7 @@ function WargaReportSafety() {
                   htmlFor={field.name}
                   className="text-xs font-bold text-slate-500 block"
                 >
-                  Kecamatan Wilayah
+                  Deskripsi Lokasi
                 </label>
                 <input
                   id={field.name}
@@ -260,12 +354,12 @@ function WargaReportSafety() {
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Misal: Saradan, Dagangan, Kare"
+                  placeholder="Misal: Dekat pos ronda RT 02, depan warung Madura"
                   className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
                 {field.state.meta.errors && (
                   <span className="text-[10px] text-red-500 mt-0.5 block px-1">
-                    {field.state.meta.errors.join(", ")}
+                    {field.state.meta.errors.map((err: any) => err.message)}
                   </span>
                 )}
               </div>
@@ -416,6 +510,14 @@ function WargaReportSafety() {
                   </div>
                 )}
               </form.Field>
+            </div>
+
+            {/* Mini Interactive Map */}
+            <div className="relative w-full h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 z-10">
+              <div ref={miniMapRef} className="w-full h-full" />
+              <div className="absolute bottom-2 left-2 bg-slate-900/75 backdrop-blur-sm text-[8px] font-black text-white px-2 py-1 rounded shadow-md pointer-events-none z-[1000]">
+                Geser pin untuk akurasi lokasi
+              </div>
             </div>
           </div>
 

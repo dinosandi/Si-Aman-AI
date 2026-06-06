@@ -4,6 +4,7 @@ import { useSafetyRoutes } from "../../use-cases/hooks/useSafetyRoutes";
 import { useReports } from "../../use-cases/hooks/useReports";
 import { locationHubService } from "../../infrastructure/services/locationHubService";
 import type { RouteRequestInput } from "../../domain/entities/route";
+import type { Report } from "../../domain/entities/report";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { SearchHeader } from "../../components/atomic/organisms/SearchHeader";
@@ -65,9 +66,13 @@ function WargaDashboard() {
   );
   const [geocodingLoading, setGeocodingLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState<Report | null>(null);
 
   // Real coordinates state (starts at Mejayan center)
-  const [currentCoord, setCurrentCoord] = useState<{ lat: number; lng: number }>({
+  const [currentCoord, setCurrentCoord] = useState<{
+    lat: number;
+    lng: number;
+  }>({
     lat: -7.6167,
     lng: 111.65,
   });
@@ -75,7 +80,7 @@ function WargaDashboard() {
   const handleStartNavigation = () => {
     setIsNavigating(true);
     window.dispatchEvent(
-      new CustomEvent("navigation-change", { detail: { active: true } })
+      new CustomEvent("navigation-change", { detail: { active: true } }),
     );
   };
 
@@ -84,14 +89,14 @@ function WargaDashboard() {
     setRouteParams(null);
     setSearchQuery("");
     window.dispatchEvent(
-      new CustomEvent("navigation-change", { detail: { active: false } })
+      new CustomEvent("navigation-change", { detail: { active: false } }),
     );
   };
 
   useEffect(() => {
     return () => {
       window.dispatchEvent(
-        new CustomEvent("navigation-change", { detail: { active: false } })
+        new CustomEvent("navigation-change", { detail: { active: false } }),
       );
     };
   }, []);
@@ -121,7 +126,7 @@ function WargaDashboard() {
             headers: {
               "Accept-Language": "id",
             },
-          }
+          },
         );
         const data = await response.json();
         if (data && data.length > 0) {
@@ -170,7 +175,11 @@ function WargaDashboard() {
   const incidentMarkersRef = useRef<L.Marker[]>([]);
 
   // Fetch nearby incidents
-  const { data: incidentReports } = useReports(currentCoord.lat, currentCoord.lng, 50000);
+  const { data: incidentReports } = useReports(
+    currentCoord.lat,
+    currentCoord.lng,
+    50000,
+  );
 
   // Real-time tracking and location hub connection
   useEffect(() => {
@@ -190,17 +199,22 @@ function WargaDashboard() {
               setCurrentCoord({ lat: latitude, lng: longitude });
 
               // Send location updates to the SignalR LocationHub in the background
-              locationHubService.updateLocation({
-                latitude,
-                longitude,
-              }).catch((err) => {
-                console.error("Gagal mengirim update lokasi ke SignalR:", err);
-              });
+              locationHubService
+                .updateLocation({
+                  latitude,
+                  longitude,
+                })
+                .catch((err) => {
+                  console.error(
+                    "Gagal mengirim update lokasi ke SignalR:",
+                    err,
+                  );
+                });
             },
             (err) => {
               console.warn("Geolocation watch failed:", err);
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
           );
         }
       } catch (err) {
@@ -240,16 +254,41 @@ function WargaDashboard() {
     const getCategoryConfig = (category: string) => {
       switch (category) {
         case "accident":
-          return { emoji: "💥", label: "Kecelakaan", colorClass: "bg-rose-500", borderClass: "border-rose-100" };
+          return {
+            emoji: "💥",
+            label: "Kecelakaan",
+            colorClass: "bg-rose-500",
+            borderClass: "border-rose-100",
+          };
         case "crime":
-          return { emoji: "🚨", label: "Kriminalitas", colorClass: "bg-red-500", borderClass: "border-red-100" };
+          return {
+            emoji: "🚨",
+            label: "Kriminalitas",
+            colorClass: "bg-red-500",
+            borderClass: "border-red-100",
+          };
         case "natural_disaster":
-          return { emoji: "🌋", label: "Bencana Alam", colorClass: "bg-orange-500", borderClass: "border-orange-100" };
+          return {
+            emoji: "🌋",
+            label: "Bencana Alam",
+            colorClass: "bg-orange-500",
+            borderClass: "border-orange-100",
+          };
         case "hazard":
         case "road_block":
-          return { emoji: "🚧", label: "Bahaya Jalan", colorClass: "bg-amber-500", borderClass: "border-amber-100" };
+          return {
+            emoji: "🚧",
+            label: "Bahaya Jalan",
+            colorClass: "bg-amber-500",
+            borderClass: "border-amber-100",
+          };
         default:
-          return { emoji: "❓", label: "Lainnya", colorClass: "bg-slate-500", borderClass: "border-slate-100" };
+          return {
+            emoji: "❓",
+            label: "Lainnya",
+            colorClass: "bg-slate-500",
+            borderClass: "border-slate-100",
+          };
       }
     };
 
@@ -273,10 +312,16 @@ function WargaDashboard() {
         iconAnchor: [60, 50],
       });
 
-      const marker = L.marker([incident.location.latitude, incident.location.longitude], { icon })
-        .addTo(map)
-        .bindPopup(`<b>${config.label}: ${incident.title}</b><br/>Laporan: ${incident.description}<br/>Status: ${incident.status}`);
-      
+      const marker = L.marker(
+        [incident.location.latitude, incident.location.longitude],
+        { icon },
+      )
+        .addTo(map);
+
+      marker.on("click", () => {
+        setSelectedIncident(incident);
+      });
+
       incidentMarkersRef.current.push(marker);
     });
   }, [incidentReports]);
@@ -306,7 +351,9 @@ function WargaDashboard() {
       iconAnchor: [12, 12],
     });
 
-    const userMarker = L.marker([currentCoord.lat, currentCoord.lng], { icon: greenDotIcon })
+    const userMarker = L.marker([currentCoord.lat, currentCoord.lng], {
+      icon: greenDotIcon,
+    })
       .addTo(map)
       .bindPopup("Lokasi Anda Saat Ini")
       .openPopup();
@@ -395,7 +442,7 @@ function WargaDashboard() {
         // Check proximity to any of the hazard coordinates
         for (const hz of hazards) {
           const distance = Math.sqrt(
-            Math.pow(midLat - hz.lat, 2) + Math.pow(midLng - hz.lng, 2)
+            Math.pow(midLat - hz.lat, 2) + Math.pow(midLng - hz.lng, 2),
           );
           // 0.004 degrees is approx 450 meters
           if (distance < 0.004 && distance < minDistance) {
@@ -444,7 +491,9 @@ function WargaDashboard() {
   // Recenter GPS
   const handleRecenter = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView([currentCoord.lat, currentCoord.lng], 14, { animate: true });
+      mapInstanceRef.current.setView([currentCoord.lat, currentCoord.lng], 14, {
+        animate: true,
+      });
     }
   };
 
@@ -462,7 +511,9 @@ function WargaDashboard() {
             setSearchQuery={setSearchQuery}
             onSubmit={handleSearchSubmit}
             onNotificationClick={() =>
-              alert("Anda memiliki 5 pemberitahuan keamanan baru di sekitar Madiun.")
+              alert(
+                "Anda memiliki 5 pemberitahuan keamanan baru di sekitar Madiun.",
+              )
             }
           />
           {suggestions.length > 0 && (
@@ -474,8 +525,12 @@ function WargaDashboard() {
                   onClick={() => handleSelectSuggestion(item)}
                   className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 active:bg-slate-100 transition-colors text-xs font-bold text-slate-700 flex flex-col gap-0.5 rounded-xl pointer-events-auto"
                 >
-                  <span className="text-slate-800 font-extrabold">{item.name}</span>
-                  <span className="text-[10px] text-slate-400 font-bold truncate">{item.address}</span>
+                  <span className="text-slate-800 font-extrabold">
+                    {item.name}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold truncate">
+                    {item.address}
+                  </span>
                 </button>
               ))}
             </div>
@@ -492,17 +547,24 @@ function WargaDashboard() {
       )}
 
       {/* Floating Map Controls */}
-      <div className={`absolute ${isNavigating ? "bottom-44" : routeParams ? "bottom-[19rem]" : "bottom-4"} right-4 z-1000 flex flex-col gap-2.5 items-center`}>
+      <div
+        className={`absolute ${isNavigating ? "bottom-44" : routeParams ? "bottom-[19rem]" : "bottom-4"} right-4 z-1000 flex flex-col gap-2.5 items-center`}
+      >
         {isNavigating && (
           <button
             type="button"
             onClick={() => {
-              alert("🚨 TANDA DARURAT DIKIRIM! Lokasi Anda dibagikan ke warga sekitar dan Polsek terdekat.");
+              alert(
+                "🚨 TANDA DARURAT DIKIRIM! Lokasi Anda dibagikan ke warga sekitar dan Polsek terdekat.",
+              );
             }}
             className="relative w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 group mb-1.5"
             title="Panggil Darurat (SOS)"
           >
-            <div className="absolute inset-0 rounded-full bg-red-500/40 animate-ping" style={{ animationDuration: '1.5s' }} />
+            <div
+              className="absolute inset-0 rounded-full bg-red-500/40 animate-ping"
+              style={{ animationDuration: "1.5s" }}
+            />
             <span className="text-xl relative z-10 select-none">🚨</span>
           </button>
         )}
@@ -514,16 +576,6 @@ function WargaDashboard() {
         >
           <Compass className="w-5 h-5 text-emerald-500 animate-pulse" />
         </button>
-        {!isNavigating && (
-          <button
-            type="button"
-            onClick={() => alert("Pengaturan Peta: Menampilkan pos keamanan dan aduan kerawanan aktif.")}
-            className="w-10 h-10 bg-white/95 backdrop-blur-md border border-slate-100 rounded-2xl flex items-center justify-center shadow-lg text-slate-700 active:scale-90 hover:bg-slate-50 transition-all"
-            title="Pengaturan Lapisan Peta"
-          >
-            <Settings2 className="w-5 h-5 text-slate-500" />
-          </button>
-        )}
       </div>
 
       {/* Route Details Sliding Drawer overlay */}
@@ -548,13 +600,21 @@ function WargaDashboard() {
                 🧭
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 block font-bold">Navigasi Aktif</span>
-                <span className="text-sm font-black text-slate-800">Menuju Lokasi Tujuan</span>
+                <span className="text-[10px] text-slate-400 block font-bold">
+                  Navigasi Aktif
+                </span>
+                <span className="text-sm font-black text-slate-800">
+                  Menuju Lokasi Tujuan
+                </span>
               </div>
             </div>
             <div className="text-right">
-              <span className="text-xs font-black text-emerald-600 block">18 Menit • 6.5 Km</span>
-              <span className="text-[9px] text-slate-400 font-bold">Rute Aman Terkomputerisasi</span>
+              <span className="text-xs font-black text-emerald-600 block">
+                18 Menit • 6.5 Km
+              </span>
+              <span className="text-[9px] text-slate-400 font-bold">
+                Rute Aman Terkomputerisasi
+              </span>
             </div>
           </div>
 
@@ -571,6 +631,94 @@ function WargaDashboard() {
           </div>
         </div>
       )}
+
+      {/* Selected Incident Custom Modal */}
+      {selectedIncident && (
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[1050] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-fade-in-up border border-slate-100 flex flex-col pointer-events-auto">
+            {/* Header */}
+            <div className="p-5 pb-4 border-b border-slate-100 flex justify-between items-start">
+              <div>
+                <span className="text-[10px] uppercase font-black tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+                  {selectedIncident.category === "accident"
+                    ? "💥 Kecelakaan"
+                    : selectedIncident.category === "crime"
+                      ? "🚨 Kriminal"
+                      : selectedIncident.category === "natural_disaster"
+                        ? "🌋 Bencana Alam"
+                        : "🚧 Jalan Rusak"}
+                </span>
+                <h4 className="text-sm font-black text-slate-800 mt-2.5 leading-tight">
+                  {selectedIncident.title}
+                </h4>
+              </div>
+              <button
+                onClick={() => setSelectedIncident(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center text-slate-500 font-extrabold text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 overflow-y-auto max-h-[60vh]">
+              {selectedIncident.imageUrl && (
+                <div className="w-full h-44 rounded-2xl overflow-hidden bg-slate-50 border border-slate-150 flex items-center justify-center">
+                  <img
+                    src={selectedIncident.imageUrl}
+                    alt={selectedIncident.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">
+                  Detail Laporan
+                </span>
+                <p className="text-xs text-slate-600 leading-relaxed font-semibold">
+                  {selectedIncident.description}
+                </p>
+              </div>
+
+              {selectedIncident.location.address && (
+                <div className="space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">
+                    Lokasi Detail
+                  </span>
+                  <span className="text-xs text-slate-700 font-bold block">
+                    {selectedIncident.location.address}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-slate-100/50">
+                <span>Pelapor: {selectedIncident.reporterName || "Warga"}</span>
+                <span>
+                  {new Date(selectedIncident.createdAt).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Action Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setSelectedIncident(null)}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
+

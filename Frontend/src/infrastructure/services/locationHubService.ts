@@ -1,4 +1,4 @@
-import { HubConnection, HubConnectionBuilder, HttpTransportType, LogLevel } from "@microsoft/signalr";
+import { HubConnection, HubConnectionBuilder, HttpTransportType, LogLevel, HubConnectionState } from "@microsoft/signalr";
 
 export interface UpdateLocationRequest {
   latitude: number;
@@ -10,50 +10,75 @@ export interface UpdateLocationRequest {
 
 export class LocationHubService {
   private connection: HubConnection | null = null;
+  private startPromise: Promise<void> | null = null;
   private onUpdatedCallback: ((data: { latitude: number; longitude: number; updatedAt: string }) => void) | null = null;
 
-  startConnection(): Promise<void> {
-    if (this.connection) {
-      return Promise.resolve();
+  async startConnection(): Promise<void> {
+    if (this.connection && this.connection.state === HubConnectionState.Connected) {
+      return;
+    }
+    if (this.startPromise) {
+      return this.startPromise;
     }
 
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5105/api";
-    const baseUrl = apiUrl.replace(/\/api$/, "");
-    const hubUrl = `${baseUrl}/hubs/location`;
+    if (!this.connection) {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5105/api";
+      const baseUrl = apiUrl.replace(/\/api$/, "");
+      const hubUrl = `${baseUrl}/hubs/location`;
 
-    this.connection = new HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
-        // Since we use withCredentials: true on Axios, SignalR connection also sends cookies automatically
-        withCredentials: true,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(LogLevel.Information)
-      .build();
+      this.connection = new HubConnectionBuilder()
+        .withUrl(hubUrl, {
+          transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+          // Since we use withCredentials: true on Axios, SignalR connection also sends cookies automatically
+          withCredentials: true,
+        })
+        .withAutomaticReconnect()
+        .configureLogging(LogLevel.Information)
+        .build();
 
-    this.connection.on("LocationUpdated", (data) => {
-      if (this.onUpdatedCallback) {
-        this.onUpdatedCallback(data);
-      }
-    });
+      this.connection.on("LocationUpdated", (data) => {
+        if (this.onUpdatedCallback) {
+          this.onUpdatedCallback(data);
+        }
+      });
+    }
 
-    return this.connection.start();
+    if (this.connection.state === HubConnectionState.Disconnected) {
+      this.startPromise = this.connection.start().finally(() => {
+        this.startPromise = null;
+      });
+      await this.startPromise;
+    }
   }
 
   async stopConnection(): Promise<void> {
     if (this.connection) {
-      await this.connection.stop();
-      this.connection = null;
+      if (
+        this.connection.state !== HubConnectionState.Disconnected &&
+        this.connection.state !== HubConnectionState.Disconnecting
+      ) {
+        if (this.startPromise) {
+          try {
+            await this.startPromise;
+          } catch (e) {
+            // ignore startup errors
+          }
+        }
+        await this.connection.stop();
+      }
     }
   }
 
   async updateLocation(request: UpdateLocationRequest): Promise<void> {
-    if (!this.connection) {
-      throw new Error("SignalR connection has not been started.");
+    if (!this.connection || this.connection.state !== HubConnectionState.Connected) {
+      await this.startConnection();
     }
     
-    // Call the UpdateLocation method on the LocationHub
-    await this.connection.invoke("UpdateLocation", request);
+    if (this.connection && this.connection.state === HubConnectionState.Connected) {
+      await this.connection.invoke("UpdateLocation", request);
+    } else {
+      throw new Error("SignalR connection is not in Connected state.");
+    }
   }
 
   onLocationUpdated(callback: (data: { latitude: number; longitude: number; updatedAt: string }) => void) {
