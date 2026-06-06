@@ -49,7 +49,6 @@ const reportValidationSchema = z.object({
 function WargaReportSafety() {
   const createReport = useCreateReport();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [gpsLoading, setGpsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Map elements ref
@@ -141,27 +140,28 @@ function WargaReportSafety() {
   }, [latValue, lngValue]);
 
   const acquireGPS = () => {
-    setGpsLoading(true);
     if (!navigator.geolocation) {
       alert("Geolocation tidak didukung browser.");
-      setGpsLoading(false);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         form.setFieldValue("latitude", pos.coords.latitude);
         form.setFieldValue("longitude", pos.coords.longitude);
-        setGpsLoading(false);
       },
       () => {
         // Fallback mockup coordinate in Madiun
         form.setFieldValue("latitude", -7.6167);
         form.setFieldValue("longitude", 111.65);
-        setGpsLoading(false);
       },
       { enableHighAccuracy: true },
     );
   };
+
+  // Auto-acquire GPS on mount
+  useEffect(() => {
+    acquireGPS();
+  }, []);
 
   return (
     <div className="flex flex-col flex-1 p-5 space-y-4 bg-slate-50">
@@ -388,7 +388,7 @@ function WargaReportSafety() {
                     htmlFor="image-upload"
                     className="text-xs font-bold text-slate-500 block"
                   >
-                    Foto Kejadian / Lokasi (Opsional)
+                    Foto Kejadian / Lokasi
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -440,16 +440,6 @@ function WargaReportSafety() {
               <span className="text-[11px] font-bold text-slate-500">
                 Koordinat Lokasi Kejadian
               </span>
-              <button
-                type="button"
-                onClick={acquireGPS}
-                className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-600 font-bold rounded-lg text-[10px] transition-colors flex items-center gap-1"
-              >
-                <Compass
-                  className={`w-3.5 h-3.5 ${gpsLoading ? "animate-spin" : ""}`}
-                />
-                <span>{gpsLoading ? "Melacak GPS..." : "Gunakan GPS HP"}</span>
-              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

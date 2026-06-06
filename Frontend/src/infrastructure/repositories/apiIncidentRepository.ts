@@ -108,13 +108,13 @@ export class ApiIncidentRepository implements IncidentRepository {
     return response.data.map((item) => ({
       id: item.id,
       category: mapBackendTypeToCategory(item.type),
-      title: item.locationDescription || `Laporan ${item.type}`,
+      title: item.other || `Laporan ${item.type}`,
       description: item.description,
       location: {
         latitude: item.latitude,
         longitude: item.longitude,
-        address: item.locationDescription,
-        district: item.other || "",
+        address: item.locationDescription || "",
+        district: item.locationDescription || "",
       },
       status: mapBackendStatusToStatus(item.status),
       upvotes: 0,
@@ -129,9 +129,9 @@ export class ApiIncidentRepository implements IncidentRepository {
   async create(input: CreateReportInput): Promise<Report> {
     const formData = new FormData();
     formData.append("Type", mapCategoryToBackendType(input.category).toString());
-    formData.append("Other", input.district || "");
+    formData.append("Other", input.address || input.title);
     formData.append("Description", input.description);
-    formData.append("LocationDescription", input.address || input.title);
+    formData.append("LocationDescription", input.district || "");
     formData.append("Latitude", input.latitude.toString());
     formData.append("Longitude", input.longitude.toString());
     
@@ -167,13 +167,13 @@ export class ApiIncidentRepository implements IncidentRepository {
     return {
       id: item.id,
       category: mapBackendTypeToCategory(item.type),
-      title: item.locationDescription,
+      title: item.other || `Laporan ${item.type}`,
       description: item.description,
       location: {
         latitude: item.latitude,
         longitude: item.longitude,
-        address: item.locationDescription,
-        district: item.other || "",
+        address: item.locationDescription || "",
+        district: item.locationDescription || "",
       },
       status: mapBackendStatusToStatus(item.status),
       upvotes: 0,

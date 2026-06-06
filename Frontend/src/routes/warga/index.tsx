@@ -67,6 +67,7 @@ function WargaDashboard() {
   const [geocodingLoading, setGeocodingLoading] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Report | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   // Real coordinates state (starts at Mejayan center)
   const [currentCoord, setCurrentCoord] = useState<{
@@ -315,8 +316,7 @@ function WargaDashboard() {
       const marker = L.marker(
         [incident.location.latitude, incident.location.longitude],
         { icon },
-      )
-        .addTo(map);
+      ).addTo(map);
 
       marker.on("click", () => {
         setSelectedIncident(incident);
@@ -663,12 +663,20 @@ function WargaDashboard() {
             {/* Modal Body */}
             <div className="p-5 space-y-4 overflow-y-auto max-h-[60vh]">
               {selectedIncident.imageUrl && (
-                <div className="w-full h-44 rounded-2xl overflow-hidden bg-slate-50 border border-slate-150 flex items-center justify-center">
+                <div
+                  onClick={() => setZoomedImage(selectedIncident.imageUrl)}
+                  className="w-full h-44 rounded-2xl overflow-hidden bg-slate-50 border border-slate-150 flex items-center justify-center cursor-zoom-in group relative"
+                >
                   <img
                     src={selectedIncident.imageUrl}
                     alt={selectedIncident.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
+                  <div className="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-white text-[10px] font-black bg-slate-900/60 px-2.5 py-1 rounded-full backdrop-blur-sm shadow-sm">
+                      🔍 Klik untuk Perbesar
+                    </span>
+                  </div>
                 </div>
               )}
 
@@ -693,15 +701,17 @@ function WargaDashboard() {
               )}
 
               <div className="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-slate-100/50">
-                <span>Pelapor: {selectedIncident.reporterName || "Warga"}</span>
                 <span>
-                  {new Date(selectedIncident.createdAt).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                  })}
+                  {new Date(selectedIncident.createdAt).toLocaleDateString(
+                    "id-ID",
+                    {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    },
+                  )}
                 </span>
               </div>
             </div>
@@ -718,7 +728,33 @@ function WargaDashboard() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
+      {/* Fullscreen Image Lightbox */}
+      {zoomedImage && (
+        <div
+          className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-[2000] flex flex-col justify-center items-center p-4 pointer-events-auto"
+          onClick={() => setZoomedImage(null)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setZoomedImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center text-white font-extrabold text-lg shadow-lg"
+          >
+            ✕
+          </button>
 
+          <div className="max-w-full max-h-[80vh] rounded-2xl overflow-hidden flex items-center justify-center">
+            <img
+              src={zoomedImage}
+              alt="Zoomed Incident"
+              className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10"
+            />
+          </div>
+
+          <span className="text-white/60 text-xs font-bold mt-4 bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
+            Klik di mana saja untuk menutup
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
