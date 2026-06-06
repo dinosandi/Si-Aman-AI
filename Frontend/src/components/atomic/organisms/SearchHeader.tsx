@@ -27,7 +27,7 @@ export function SearchHeader({
         value={searchQuery}
         onChange={setSearchQuery}
         onSubmit={onSubmit}
-        placeholder="Cari Rute Aman & Lokasi Madiun"
+        placeholder="Cari Lokasi Tujuan Dengan Aman"
         className="shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
       />
 
@@ -40,7 +40,10 @@ export function SearchHeader({
       >
         <Bell className="w-5 h-5 text-slate-700" />
         {unreadNotifications > 0 && (
-          <Badge content={unreadNotifications} className="absolute -top-1 -right-1" />
+          <Badge
+            content={unreadNotifications}
+            className="absolute -top-1 -right-1"
+          />
         )}
       </button>
     </div>

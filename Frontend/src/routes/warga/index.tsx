@@ -591,6 +591,82 @@ function WargaDashboard() {
     }
   };
 
+  // Helper to calculate remaining route distance in km along the polyline path
+  const calculateRemainingRouteDistance = (
+    userLat: number,
+    userLng: number,
+    coords: [number, number][],
+  ) => {
+    if (coords.length === 0) return 0;
+
+    let minDistance = 999999;
+    let closestIdx = 0;
+    for (let i = 0; i < coords.length; i++) {
+      const [lng, lat] = coords[i];
+      const dist = Math.sqrt(
+        Math.pow(userLat - lat, 2) + Math.pow(userLng - lng, 2),
+      );
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestIdx = i;
+      }
+    }
+
+    const distBetween = (
+      lat1: number,
+      lon1: number,
+      lat2: number,
+      lon2: number,
+    ) => {
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    let totalKm = distBetween(
+      userLat,
+      userLng,
+      coords[closestIdx][1],
+      coords[closestIdx][0],
+    );
+
+    for (let i = closestIdx; i < coords.length - 1; i++) {
+      totalKm += distBetween(
+        coords[i][1],
+        coords[i][0],
+        coords[i + 1][1],
+        coords[i + 1][0],
+      );
+    }
+
+    return totalKm;
+  };
+
+  const activeRoute =
+    routes && routes[selectedRouteIndex] ? routes[selectedRouteIndex] : null;
+  let displayDistance = activeRoute ? activeRoute.distanceKm : 0;
+  let displayDuration = activeRoute ? activeRoute.durationMinutes : 0;
+
+  if (activeRoute && routeParams) {
+    const remainingKm = calculateRemainingRouteDistance(
+      currentCoord.lat,
+      currentCoord.lng,
+      activeRoute.geometry.coordinates,
+    );
+    displayDistance = parseFloat(
+      Math.min(remainingKm, activeRoute.distanceKm).toFixed(1),
+    );
+    const speedRatio = activeRoute.durationMinutes / activeRoute.distanceKm;
+    displayDuration = Math.max(1, Math.ceil(displayDistance * speedRatio));
+  }
+
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden">
       {/* Full-screen Map Container */}
@@ -706,7 +782,7 @@ function WargaDashboard() {
             </div>
             <div className="text-right">
               <span className="text-xs font-black text-emerald-600 block">
-                18 Menit • 6.5 Km
+                {displayDuration} Menit • {displayDistance} Km
               </span>
             </div>
           </div>
