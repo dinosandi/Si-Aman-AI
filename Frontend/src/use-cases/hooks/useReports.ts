@@ -7,7 +7,11 @@ import { compressImage } from "../../infrastructure/utils/imageCompressor";
 const REPORTS_CACHE_KEY = "reports";
 
 // Fetch reports using Repository (with spatial coordinates for Mejayan/Madiun as default)
-const fetchReports = async (lat: number = -7.6167, lng: number = 111.65, radius: number = 50000): Promise<Report[]> => {
+const fetchReports = async (
+  lat: number = -7.6167,
+  lng: number = 111.65,
+  radius: number = 50000,
+): Promise<Report[]> => {
   const cacheKey = `reports_list_${lat}_${lng}_${radius}`;
   try {
     const response = await incidentRepository.getNearby(lat, lng, radius);
@@ -16,14 +20,19 @@ const fetchReports = async (lat: number = -7.6167, lng: number = 111.65, radius:
     return response;
   } catch (error: any) {
     if (error.code === "NETWORK_OFFLINE" || !navigator.onLine) {
-      const cached = await OfflineStorage.getCachedSpatialData<Report[]>(cacheKey);
+      const cached =
+        await OfflineStorage.getCachedSpatialData<Report[]>(cacheKey);
       if (cached) return cached;
     }
     throw error;
   }
 };
 
-export const useReports = (lat: number = -7.6167, lng: number = 111.65, radius: number = 50000) => {
+export const useReports = (
+  lat: number = -7.6167,
+  lng: number = 111.65,
+  radius: number = 50000,
+) => {
   return useQuery({
     queryKey: [REPORTS_CACHE_KEY, lat, lng, radius],
     queryFn: () => fetchReports(lat, lng, radius),
@@ -56,7 +65,8 @@ export const useCreateReport = () => {
         return {
           isOfflineSaved: true,
           tempId,
-          message: "Laporan Anda disimpan secara lokal (Offline) dan akan disinkronkan saat terhubung kembali.",
+          message:
+            "Laporan Anda disimpan secara lokal (Offline) dan akan disinkronkan saat terhubung kembali.",
         };
       }
 
@@ -69,7 +79,7 @@ export const useCreateReport = () => {
       return {
         isOfflineSaved: false,
         data: response,
-        message: "Laporan berhasil terkirim dan dipublikasikan.",
+        message: "Laporan berhasil terkirim.",
       };
     },
     onSuccess: (result) => {
@@ -107,6 +117,57 @@ export const useSyncOfflineReports = () => {
       if (result.syncedCount > 0) {
         queryClient.invalidateQueries({ queryKey: [REPORTS_CACHE_KEY] });
       }
+    },
+  });
+};
+
+export const useVerifyReport = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => incidentRepository.verify(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REPORTS_CACHE_KEY] });
+    },
+  });
+};
+
+export const useRejectReport = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => incidentRepository.reject(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REPORTS_CACHE_KEY] });
+    },
+  });
+};
+
+export const useResolveReport = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => incidentRepository.resolve(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REPORTS_CACHE_KEY] });
+    },
+  });
+};
+
+export const useDeleteReport = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => incidentRepository.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REPORTS_CACHE_KEY] });
+    },
+  });
+};
+
+export const useVoteIncident = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, type }: { id: string; type: number }) =>
+      incidentRepository.vote(id, type),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REPORTS_CACHE_KEY] });
     },
   });
 };

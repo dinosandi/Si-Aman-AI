@@ -1,5 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router'
 import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import type { ColumnDef } from '@tanstack/react-table';
 import {
   useReactTable,
@@ -9,9 +10,10 @@ import {
   getFilteredRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { useReports } from '../../use-cases/hooks/useReports';
+import { useReports, useVerifyReport, useRejectReport, useResolveReport, useDeleteReport } from '../../use-cases/hooks/useReports';
 import type { Report, ReportCategory, ReportStatus } from '../../domain/entities/report';
-import { ShieldCheck, RefreshCw, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle } from 'lucide-react';
+import { ShieldCheck, RefreshCw, ChevronLeft, ChevronRight, Search, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Toast } from "../../components/atomic/atoms/Toast";
 
 export const Route = createFileRoute('/admin/reports')({
   component: AdminReportsManager,
@@ -20,82 +22,57 @@ export const Route = createFileRoute('/admin/reports')({
 function AdminReportsManager() {
   const { data: serverReports, isLoading, refetch } = useReports();
   const [globalFilter, setGlobalFilter] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  // Local fallback mock data if server is offline
-  const fallbackReports: Report[] = useMemo(() => [
-    {
-      id: 'REP-001',
-      category: 'crime',
-      title: 'Dugaan Begal Motor di Jembatan Balerejo',
-      description: 'Ada motor mencurigakan bergerombol di dekat jembatan tanpa plat nomor tiap pukul 23:00 malam.',
-      location: { latitude: -7.6012, longitude: 111.6642, district: 'Balerejo' },
-      status: 'pending',
-      upvotes: 24,
-      downvotes: 1,
-      reporterId: 'user_1',
-      reporterName: 'Sandi Dinata',
-      createdAt: '2026-05-28T14:20:00Z',
-    },
-    {
-      id: 'REP-002',
-      category: 'hazard',
-      title: 'Pohon Sengon Tumbang di Jalur Kare',
-      description: 'Batang pohon menghalangi jalur pendakian wisata Kare, menutup separuh jalan aspal.',
-      location: { latitude: -7.6981, longitude: 111.7102, district: 'Kare' },
-      status: 'verified',
-      upvotes: 45,
-      downvotes: 0,
-      reporterId: 'user_2',
-      reporterName: 'Wawan Gunawan',
-      createdAt: '2026-05-28T10:15:00Z',
-    },
-    {
-      id: 'REP-003',
-      category: 'natural_disaster',
-      title: 'Longsor Skala Kecil di Lereng Wilis Dagangan',
-      description: 'Tebing setinggi 3 meter gugur dan menimbun bahu jalan kabupaten. Perlu alat berat.',
-      location: { latitude: -7.7214, longitude: 111.6053, district: 'Dagangan' },
-      status: 'pending',
-      upvotes: 89,
-      downvotes: 2,
-      reporterId: 'user_3',
-      reporterName: 'Rian Madiun',
-      createdAt: '2026-05-28T09:00:00Z',
-    },
-    {
-      id: 'REP-004',
-      category: 'road_block',
-      title: 'Pemasangan Tenda Hajatan Menutup Jalan Pilangkenceng',
-      description: 'Pesta pernikahan menggunakan jalan utama desa tanpa jalur alternatif yang memadai.',
-      location: { latitude: -7.5819, longitude: 111.6322, district: 'Pilangkenceng' },
-      status: 'resolved',
-      upvotes: 12,
-      downvotes: 8,
-      reporterId: 'user_4',
-      reporterName: 'Ahmad Sodikin',
-      createdAt: '2026-05-27T15:30:00Z',
-    }
-  ], []);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
-  // Merge server data and fallback data safely
+  // Use server reports
   const tableData = useMemo(() => {
-    if (serverReports && serverReports.length > 0) {
-      return serverReports;
-    }
-    return fallbackReports;
-  }, [serverReports, fallbackReports]);
+    return serverReports || [];
+  }, [serverReports]);
+
+  const verifyMutation = useVerifyReport();
+  const rejectMutation = useRejectReport();
+  const resolveMutation = useResolveReport();
+  const deleteMutation = useDeleteReport();
 
   // Actions handler
-  const handleVerify = (id: string) => {
-    alert(`Laporan ${id} diverifikasi & dipublikasikan pada rekomendasi rute warga.`);
+  const handleVerify = async (id: string) => {
+    try {
+      await verifyMutation.mutateAsync(id);
+      setToast({ message: `Laporan ${id} berhasil diverifikasi.`, type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal memverifikasi laporan.", type: 'error' });
+    }
   };
 
-  const handleResolve = (id: string) => {
-    alert(`Kejadian ${id} dinyatakan telah diselesaikan oleh petugas setempat.`);
+  const handleResolve = async (id: string) => {
+    try {
+      await resolveMutation.mutateAsync(id);
+      setToast({ message: `Kejadian ${id} dinyatakan telah diselesaikan.`, type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menyelesaikan kejadian.", type: 'error' });
+    }
   };
 
-  const handleReject = (id: string) => {
-    alert(`Laporan ${id} ditolak karena dinilai tidak valid atau spam.`);
+  const handleReject = async (id: string) => {
+    try {
+      await rejectMutation.mutateAsync(id);
+      setToast({ message: `Laporan ${id} berhasil ditolak.`, type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menolak laporan.", type: 'error' });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Apakah Anda yakin ingin menghapus laporan ini secara permanen dari basis data?")) {
+      try {
+        await deleteMutation.mutateAsync(id);
+        setToast({ message: `Laporan ${id} berhasil dihapus.`, type: 'success' });
+      } catch (err: any) {
+        setToast({ message: err.message || "Gagal menghapus laporan.", type: 'error' });
+      }
+    }
   };
 
   // Define Columns for TanStack Table
@@ -105,6 +82,24 @@ function AdminReportsManager() {
         accessorKey: 'id',
         header: 'ID',
         cell: (info) => <span className="font-mono text-slate-400 font-bold">{info.getValue() as string}</span>,
+      },
+      {
+        accessorKey: 'imageUrl',
+        header: 'Foto',
+        cell: (info) => {
+          const url = info.getValue() as string;
+          if (!url) return <span className="text-slate-400 text-[10px]">Tidak ada foto</span>;
+          return (
+            <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 cursor-zoom-in bg-slate-50 flex items-center justify-center shrink-0">
+              <img
+                src={url}
+                alt="Laporan"
+                className="w-full h-full object-cover hover:scale-110 transition-transform duration-200"
+                onClick={() => setZoomedImage(url)}
+              />
+            </div>
+          );
+        },
       },
       {
         accessorKey: 'category',
@@ -201,6 +196,13 @@ function AdminReportsManager() {
                   <XCircle className="w-4 h-4" />
                 </button>
               )}
+              <button
+                onClick={() => handleDelete(row.id)}
+                title="Hapus Laporan"
+                className="p-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           );
         },
@@ -335,6 +337,36 @@ function AdminReportsManager() {
           </div>
         </div>
       </div>
+
+      {/* Zoom Image Modal */}
+      {zoomedImage && createPortal(
+        <div
+          className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setZoomedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[85vh] bg-white p-2 rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={zoomedImage}
+              alt="Zoomed Report"
+              className="max-w-full max-h-[80vh] object-contain rounded-xl"
+            />
+            <button
+              onClick={() => setZoomedImage(null)}
+              className="absolute top-4 right-4 bg-black/60 hover:bg-black text-white px-3 py-1.5 rounded-full font-bold transition-colors"
+            >
+              Tutup ✕
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

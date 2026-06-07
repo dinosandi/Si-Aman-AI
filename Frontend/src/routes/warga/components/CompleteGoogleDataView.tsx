@@ -41,7 +41,7 @@ export function CompleteGoogleDataView({
           <div className="flex items-center justify-center gap-3.5">
             <img
               src="/img/icon.png"
-              alt="SI AMAN AI Logo"
+              alt="SI AMAN Logo"
               className="w-16 h-16 object-contain"
             />
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">

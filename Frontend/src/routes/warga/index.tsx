@@ -1,15 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useSafetyRoutes } from "../../use-cases/hooks/useSafetyRoutes";
-import { useReports } from "../../use-cases/hooks/useReports";
+import { useReports, useVoteIncident } from "../../use-cases/hooks/useReports";
 import { locationHubService } from "../../infrastructure/services/locationHubService";
+import { sosHubService } from "../../infrastructure/services/sosHubService";
+import { useAuth } from "../../use-cases/hooks/useAuth";
 import type { RouteRequestInput } from "../../domain/entities/route";
 import type { Report } from "../../domain/entities/report";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { SearchHeader } from "../../components/atomic/organisms/SearchHeader";
 import { RouteDrawer } from "../../components/atomic/organisms/RouteDrawer";
-import { Compass, Settings2 } from "lucide-react";
+import { Toast } from "../../components/atomic/atoms/Toast";
+import {
+  Compass,
+  Settings2,
+  Eye,
+  EyeOff,
+  Lock,
+  AlertTriangle,
+  ShieldCheck,
+  CheckCircle,
+} from "lucide-react";
 
 // Fix Leaflet marker icons in Vite
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -59,7 +72,12 @@ const geocodeAddress = async (
   return null;
 };
 
-const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+const calculateBearing = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) => {
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const lat1Rad = (lat1 * Math.PI) / 180;
   const lat2Rad = (lat2 * Math.PI) / 180;
@@ -73,22 +91,236 @@ const calculateBearing = (lat1: number, lon1: number, lat2: number, lon2: number
   return (brng + 360) % 360;
 };
 
+const getDistanceMeters = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) => {
+  const R = 6371e3; // metres
+  const phi1 = (lat1 * Math.PI) / 180;
+  const phi2 = (lat2 * Math.PI) / 180;
+  const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+  const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+    Math.cos(phi1) *
+      Math.cos(phi2) *
+      Math.sin(deltaLambda / 2) *
+      Math.sin(deltaLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+};
+
 function WargaDashboard() {
+  const auth = useAuth();
   const [heading, setHeading] = useState<number>(0);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [votedIncidentIds, setVotedIncidentIds] = useState<
+    Record<string, boolean>
+  >({});
+  const voteMutation = useVoteIncident();
+
+  useEffect(() => {
+    const message = localStorage.getItem("warga_toast_message");
+    const type = localStorage.getItem("warga_toast_type") as
+      | "success"
+      | "error"
+      | null;
+    if (message) {
+      setToast({ message, type: type || "success" });
+      localStorage.removeItem("warga_toast_message");
+      localStorage.removeItem("warga_toast_type");
+    }
+  }, []);
+
+  // SOS States
+  const [isSosActive, setIsSosActive] = useState<boolean>(() => {
+    return localStorage.getItem("nav_is_sos_active") === "true";
+  });
+  const [showSosActivationPopup, setShowSosActivationPopup] = useState(false);
+  const [showSosDeactivationPopup, setShowSosDeactivationPopup] =
+    useState(false);
+  const [sosPassword, setSosPassword] = useState("");
+  const [showSosPassword, setShowSosPassword] = useState(false);
+  const [sosError, setSosError] = useState<string | null>(null);
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+
+  const isSosActiveRef = useRef(isSosActive);
+  useEffect(() => {
+    isSosActiveRef.current = isSosActive;
+  }, [isSosActive]);
+
+  const handleSosClick = async () => {
+    if (!isSosActive) {
+      try {
+        await sosHubService.startConnection();
+
+        let lat = currentCoord.lat;
+        let lng = currentCoord.lng;
+        if (navigator.geolocation) {
+          try {
+            const pos = await new Promise<GeolocationPosition>(
+              (resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                  enableHighAccuracy: true,
+                  timeout: 5000,
+                });
+              },
+            );
+            lat = pos.coords.latitude;
+            lng = pos.coords.longitude;
+          } catch (e) {
+            console.warn(
+              "Gagal mendapatkan lokasi GPS akurat untuk SOS, menggunakan koordinat peta:",
+              e,
+            );
+          }
+        }
+
+        const alertId = await sosHubService.triggerSos(lat, lng);
+        localStorage.setItem("nav_active_sos_alert_id", alertId);
+
+        setIsSosActive(true);
+        setShowSosActivationPopup(true);
+      } catch (err) {
+        console.error("Gagal koneksi atau trigger SOS Hub:", err);
+        setIsSosActive(true);
+        setShowSosActivationPopup(true);
+      }
+    } else {
+      setSosPassword("");
+      setSosError(null);
+      setShowSosPassword(false);
+      setShowSosDeactivationPopup(true);
+    }
+  };
+
+  const handleVerifySosPassword = async () => {
+    setSosError(null);
+    setIsVerifyingPassword(true);
+    try {
+      const currentUser =
+        auth.user ||
+        JSON.parse(localStorage.getItem("warga_current_user") || "{}");
+      const emailToVerify = currentUser.email || "warga@siaman.id";
+
+      await auth.login({
+        email: emailToVerify,
+        password: sosPassword,
+      });
+
+      const alertId = localStorage.getItem("nav_active_sos_alert_id");
+      if (alertId) {
+        try {
+          await sosHubService.resolveSos(alertId);
+        } catch (e) {
+          console.error("Gagal resolve SOS di server:", e);
+        }
+      }
+
+      setIsSosActive(false);
+      setShowSosDeactivationPopup(false);
+      localStorage.removeItem("nav_is_sos_active");
+      localStorage.removeItem("nav_active_sos_alert_id");
+      await sosHubService.stopConnection();
+    } catch (err: any) {
+      setSosError("Kata sandi salah. Silakan coba lagi.");
+    } finally {
+      setIsVerifyingPassword(false);
+    }
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [routeParams, setRouteParams] = useState<RouteRequestInput | null>(
-    null,
+    () => {
+      const saved = localStorage.getItem("nav_route_params");
+      return saved ? JSON.parse(saved) : null;
+    },
   );
   const [geocodingLoading, setGeocodingLoading] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [isNavigating, setIsNavigating] = useState<boolean>(() => {
+    return localStorage.getItem("nav_is_navigating") === "true";
+  });
   const [selectedIncident, setSelectedIncident] = useState<Report | null>(null);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(() => {
+    const saved = localStorage.getItem("nav_selected_route_index");
+    return saved ? parseInt(saved, 10) : 0;
+  });
 
   // Reset selected route index when route parameters change
   useEffect(() => {
-    setSelectedRouteIndex(0);
+    if (!localStorage.getItem("nav_route_params")) {
+      setSelectedRouteIndex(0);
+    }
   }, [routeParams]);
+
+  // Persist navigation states to localStorage
+  useEffect(() => {
+    if (routeParams) {
+      localStorage.setItem("nav_route_params", JSON.stringify(routeParams));
+    } else {
+      localStorage.removeItem("nav_route_params");
+    }
+  }, [routeParams]);
+
+  useEffect(() => {
+    localStorage.setItem("nav_is_navigating", String(isNavigating));
+    window.dispatchEvent(
+      new CustomEvent("navigation-change", {
+        detail: { active: isNavigating },
+      }),
+    );
+  }, [isNavigating]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "nav_selected_route_index",
+      String(selectedRouteIndex),
+    );
+  }, [selectedRouteIndex]);
+
+  useEffect(() => {
+    localStorage.setItem("nav_is_sos_active", String(isSosActive));
+  }, [isSosActive]);
+
+  useEffect(() => {
+    if (isSosActive) {
+      sosHubService.startConnection().catch((err) => {
+        console.error(
+          "Gagal melakukan auto-koneksi ulang ke SOS Hub saat refresh:",
+          err,
+        );
+      });
+
+      const unsubscribe = sosHubService.onSosReceived(({ method, data }) => {
+        if (method === "SosResolved") {
+          const storedAlertId = localStorage.getItem("nav_active_sos_alert_id");
+          if (!data || data.alertId === storedAlertId) {
+            setIsSosActive(false);
+            localStorage.removeItem("nav_is_sos_active");
+            localStorage.removeItem("nav_active_sos_alert_id");
+            sosHubService.stopConnection().catch((err) => console.error(err));
+            setToast({
+              message: "Bantuan darurat SOS Anda telah selesai.",
+              type: "success",
+            });
+          }
+        }
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [isSosActive]);
 
   // Real coordinates state (starts at Mejayan center)
   const [currentCoord, setCurrentCoord] = useState<{
@@ -108,8 +340,13 @@ function WargaDashboard() {
 
   const handleStopNavigation = () => {
     setIsNavigating(false);
+    setIsSosActive(false);
     setRouteParams(null);
     setSearchQuery("");
+    localStorage.removeItem("nav_route_params");
+    localStorage.removeItem("nav_is_navigating");
+    localStorage.removeItem("nav_selected_route_index");
+    localStorage.removeItem("nav_is_sos_active");
     window.dispatchEvent(
       new CustomEvent("navigation-change", { detail: { active: false } }),
     );
@@ -197,11 +434,59 @@ function WargaDashboard() {
   const incidentMarkersRef = useRef<L.Marker[]>([]);
 
   // Fetch nearby incidents
-  const { data: incidentReports } = useReports(
+  const { data: rawIncidentReports } = useReports(
     currentCoord.lat,
     currentCoord.lng,
     50000,
   );
+
+  const incidentReports = useMemo(() => {
+    return rawIncidentReports
+      ? rawIncidentReports.filter((r) => r.status === "verified")
+      : [];
+  }, [rawIncidentReports]);
+
+  const votableIncidents = useMemo(() => {
+    if (!rawIncidentReports) return [];
+
+    const currentUser =
+      auth.user ||
+      JSON.parse(localStorage.getItem("warga_current_user") || "{}");
+    const currentUserId = currentUser.userId || currentUser.id;
+
+    return rawIncidentReports.filter((r) => {
+      // Show unverified/pending incidents
+      if (r.status !== "pending") return false;
+      // Already voted in this session
+      if (votedIncidentIds[r.id]) return false;
+      // Already voted in database
+      if (r.votedUserIds && currentUserId && r.votedUserIds.includes(currentUserId)) return false;
+      // Distance is within 2km (2000 meters)
+      const dist = getDistanceMeters(
+        currentCoord.lat,
+        currentCoord.lng,
+        r.location.latitude,
+        r.location.longitude,
+      );
+      return dist <= 2000;
+    });
+  }, [rawIncidentReports, currentCoord, votedIncidentIds, auth.user]);
+
+  const handleVote = async (incidentId: string, type: number) => {
+    try {
+      await voteMutation.mutateAsync({ id: incidentId, type });
+      setToast({
+        message: "Terima kasih! Penilaian Anda berhasil disimpan.",
+        type: "success",
+      });
+      setVotedIncidentIds((prev) => ({ ...prev, [incidentId]: true }));
+    } catch (err: any) {
+      setToast({
+        message: err.message || "Gagal mengirimkan vote.",
+        type: "error",
+      });
+    }
+  };
 
   // Real-time tracking and location hub connection
   useEffect(() => {
@@ -220,8 +505,16 @@ function WargaDashboard() {
               const { latitude, longitude } = pos.coords;
               setCurrentCoord((prev) => {
                 if (prev.lat !== latitude || prev.lng !== longitude) {
-                  const newHeading = calculateBearing(prev.lat, prev.lng, latitude, longitude);
-                  if (Math.abs(latitude - prev.lat) > 0.00001 || Math.abs(longitude - prev.lng) > 0.00001) {
+                  const newHeading = calculateBearing(
+                    prev.lat,
+                    prev.lng,
+                    latitude,
+                    longitude,
+                  );
+                  if (
+                    Math.abs(latitude - prev.lat) > 0.00001 ||
+                    Math.abs(longitude - prev.lng) > 0.00001
+                  ) {
                     setHeading(newHeading);
                   }
                 }
@@ -240,6 +533,21 @@ function WargaDashboard() {
                     err,
                   );
                 });
+
+              // Send to SOS Hub if SOS is active
+              if (isSosActiveRef.current) {
+                sosHubService
+                  .updateSosLocation({
+                    latitude,
+                    longitude,
+                  })
+                  .catch((err) => {
+                    console.error(
+                      "Gagal mengirim update lokasi ke SOS Hub:",
+                      err,
+                    );
+                  });
+              }
             },
             (err) => {
               console.warn("Geolocation watch failed:", err);
@@ -260,6 +568,7 @@ function WargaDashboard() {
         navigator.geolocation.clearWatch(watchId);
       }
       locationHubService.stopConnection();
+      sosHubService.stopConnection();
     };
   }, []);
 
@@ -541,7 +850,8 @@ function WargaDashboard() {
     for (let i = 0; i < coords.length; i++) {
       const [lng, lat] = coords[i];
       const dist = Math.sqrt(
-        Math.pow(currentCoord.lat - lat, 2) + Math.pow(currentCoord.lng - lng, 2),
+        Math.pow(currentCoord.lat - lat, 2) +
+          Math.pow(currentCoord.lng - lng, 2),
       );
       if (dist < minDistance) {
         minDistance = dist;
@@ -680,11 +990,8 @@ function WargaDashboard() {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             onSubmit={handleSearchSubmit}
-            onNotificationClick={() =>
-              alert(
-                "Anda memiliki 5 pemberitahuan keamanan baru di sekitar Madiun.",
-              )
-            }
+            unreadNotifications={votableIncidents.length}
+            onNotificationClick={() => setShowNotificationModal(true)}
           />
           {suggestions.length > 0 && (
             <div className="bg-white/95 backdrop-blur-md border border-slate-100 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.12)] max-h-48 overflow-y-auto w-full z-[1010] flex flex-col divide-y divide-slate-100/50 p-1.5 animate-fade-in pointer-events-auto">
@@ -723,19 +1030,27 @@ function WargaDashboard() {
         {isNavigating && (
           <button
             type="button"
-            onClick={() => {
-              alert(
-                "🚨 TANDA DARURAT DIKIRIM! Lokasi Anda dibagikan ke warga sekitar dan Polsek terdekat.",
-              );
-            }}
-            className="relative w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 group mb-1.5"
-            title="Panggil Darurat (SOS)"
+            onClick={handleSosClick}
+            className={`relative w-12 h-12 ${
+              isSosActive
+                ? "bg-red-500 animate-pulse"
+                : "bg-red-600 hover:bg-red-700"
+            } text-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all shrink-0 group mb-1.5`}
+            title={
+              isSosActive ? "Matikan Bantuan SOS" : "Panggil Darurat (SOS)"
+            }
           >
             <div
-              className="absolute inset-0 rounded-full bg-red-500/40 animate-ping"
-              style={{ animationDuration: "1.5s" }}
+              className={`absolute inset-0 rounded-full ${
+                isSosActive ? "bg-red-500/60" : "bg-red-500/40"
+              } animate-ping`}
+              style={{ animationDuration: isSosActive ? "1.2s" : "1.8s" }}
             />
-            <span className="text-xl relative z-10 select-none">🚨</span>
+            {isSosActive ? (
+              <div className="w-3.5 h-3.5 bg-white rounded-sm relative z-10 animate-pulse" />
+            ) : (
+              <span className="text-xl relative z-10 select-none">🚨</span>
+            )}
           </button>
         )}
         <button
@@ -898,31 +1213,266 @@ function WargaDashboard() {
         </div>
       )}
       {/* Fullscreen Image Lightbox */}
-      {zoomedImage && (
-        <div
-          className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-[2000] flex flex-col justify-center items-center p-4 pointer-events-auto"
-          onClick={() => setZoomedImage(null)}
-        >
-          {/* Close button */}
-          <button
+      {zoomedImage &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[10000] flex flex-col justify-center items-center p-4 pointer-events-auto"
             onClick={() => setZoomedImage(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center text-white font-extrabold text-lg shadow-lg"
           >
-            ✕
-          </button>
+            {/* Close button */}
+            <button
+              onClick={() => setZoomedImage(null)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all flex items-center justify-center text-white font-extrabold text-lg shadow-lg"
+            >
+              ✕
+            </button>
 
-          <div className="max-w-full max-h-[80vh] rounded-2xl overflow-hidden flex items-center justify-center">
-            <img
-              src={zoomedImage}
-              alt="Zoomed Incident"
-              className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10"
-            />
+            <div className="max-w-full max-h-[80vh] rounded-2xl overflow-hidden flex items-center justify-center">
+              <img
+                src={zoomedImage}
+                alt="Zoomed Incident"
+                className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl border border-white/10"
+              />
+            </div>
+
+            <span className="text-white/60 text-xs font-bold mt-4 bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
+              Klik di mana saja untuk menutup
+            </span>
+          </div>,
+          document.body,
+        )}
+
+      {/* SOS Activation Alert Modal */}
+      {showSosActivationPopup && (
+        <div className="absolute inset-0 bg-slate-900/65 backdrop-blur-sm z-[2000] flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center space-y-4 pointer-events-auto animate-fade-in-up">
+            <div className="p-3 bg-red-50 rounded-full text-red-500">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <h4 className="font-black text-red-650 text-xs tracking-wide">
+              Peringatan
+            </h4>
+            <p className="text-[10px] font-bold text-slate-500 leading-relaxed max-w-[240px]">
+              Kami dan pihak berwajib akan memantau anda melalui lokasi dari
+              perangkat anda secara realtime, selama mode bantuan terus aktif.
+              Demi kenyamanan dan keamanan anda saat berkendara.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowSosActivationPopup(false)}
+              className="w-full bg-[#0f4c5c] hover:bg-[#0c3e4c] text-white font-extrabold py-3 rounded-2xl active:scale-95 transition-all text-[11px] shadow-md mt-2"
+            >
+              Tutup
+            </button>
           </div>
-
-          <span className="text-white/60 text-xs font-bold mt-4 bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
-            Klik di mana saja untuk menutup
-          </span>
         </div>
+      )}
+
+      {/* SOS Deactivation Password Modal */}
+      {showSosDeactivationPopup && (
+        <div className="absolute inset-0 bg-slate-900/65 backdrop-blur-sm z-[2000] flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl w-full max-w-xs p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center space-y-4 pointer-events-auto animate-fade-in-up">
+            <div className="p-3 bg-red-50 rounded-full text-red-500">
+              <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <h4 className="font-black text-red-650 text-xs tracking-wide">
+              Peringatan
+            </h4>
+            <p className="text-[10px] font-bold text-slate-500 leading-relaxed max-w-[255px]">
+              Masukkan kata sandi anda untuk mematikan mode bantuan ini, dan
+              data berkendara anda selama mode bantuan aktif akan terhapus
+              otomatis oleh sistem ketika anda mematikan mode ini.
+            </p>
+
+            {/* Password Input field */}
+            <div className="w-full relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <Lock className="w-3.5 h-3.5" />
+              </span>
+              <input
+                type={showSosPassword ? "text" : "password"}
+                placeholder="Kata Sandi"
+                value={sosPassword}
+                onChange={(e) => setSosPassword(e.target.value)}
+                className="w-full pl-9 pr-9 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-[11px] font-bold focus:outline-none focus:ring-1 focus:ring-slate-350 focus:bg-white animate-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSosPassword(!showSosPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650"
+              >
+                {showSosPassword ? (
+                  <EyeOff className="w-3.5 h-3.5" />
+                ) : (
+                  <Eye className="w-3.5 h-3.5" />
+                )}
+              </button>
+            </div>
+
+            {sosError && (
+              <p className="text-[9px] text-red-600 font-extrabold bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-100 w-full text-center animate-none">
+                {sosError}
+              </p>
+            )}
+
+            <button
+              type="button"
+              disabled={isVerifyingPassword || !sosPassword}
+              onClick={handleVerifySosPassword}
+              className="w-full bg-[#0f4c5c] hover:bg-[#0c3e4c] disabled:opacity-50 text-white font-extrabold py-3 rounded-2xl active:scale-95 transition-all text-[11px] shadow-md mt-2 flex justify-center items-center gap-1.5"
+            >
+              {isVerifyingPassword ? (
+                <>
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Memverifikasi...</span>
+                </>
+              ) : (
+                <span>Matikan</span>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Modal for Incident Voting */}
+      {showNotificationModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            onClick={() => setShowNotificationModal(false)}
+          >
+            <div
+              className="w-full max-w-md bg-white rounded-[32px] border border-slate-100 shadow-2xl overflow-hidden p-6 relative flex flex-col max-h-[85vh] animate-fade-in-up"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-750 transition-colors font-extrabold text-lg p-1"
+              >
+                ✕
+              </button>
+
+              {/* Header */}
+              <div className="mb-4">
+                <h3 className="text-base font-black text-slate-800 tracking-tight">
+                  Pemberitahuan Keamanan
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold">
+                  Bantu warga menilai kebenaran laporan kejadian di sekitar
+                  Anda.
+                </p>
+              </div>
+
+              {/* Incidents List Container */}
+              <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
+                {votableIncidents.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3 text-slate-300">
+                      <svg
+                        className="w-8 h-8"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-xs font-bold text-slate-650">
+                      Tidak ada laporan baru
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1 max-w-[200px]">
+                      Semua laporan di sekitar Anda telah selesai dinilai atau
+                      tidak ada kejadian baru.
+                    </p>
+                  </div>
+                ) : (
+                  votableIncidents.map((incident) => (
+                    <div
+                      key={incident.id}
+                      className="border border-slate-100 bg-slate-50/50 rounded-2xl p-4 space-y-3.5 relative overflow-hidden shadow-sm hover:shadow transition-all"
+                    >
+                      {/* Badge Category */}
+                      <div className="flex items-center justify-between">
+                        <span className="bg-rose-50 text-rose-650 border border-rose-100/60 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                          {incident.category}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-bold">
+                          {new Date(incident.createdAt).toLocaleDateString(
+                            "id-ID",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Incident Image */}
+                      {incident.imageUrl && (
+                        <div
+                          className="w-full h-32 rounded-xl overflow-hidden bg-slate-100 relative cursor-zoom-in"
+                          onClick={() => setZoomedImage(incident.imageUrl)}
+                        >
+                          <img
+                            src={incident.imageUrl}
+                            alt={incident.title}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+
+                      {/* Description & Location */}
+                      <div className="space-y-1.5">
+                        <h4 className="text-xs font-extrabold text-slate-800 leading-tight">
+                          {incident.title}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">
+                          {incident.description}
+                        </p>
+                        {incident.location?.address && (
+                          <p className="text-[9px] text-slate-400 font-bold flex items-center gap-1">
+                            📍 {incident.location.address}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Action Buttons: Fakta / Hoax */}
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                        <button
+                          onClick={() => handleVote(incident.id, 0)} // Fakta
+                          className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-extrabold text-[10px] py-2 px-3 rounded-xl transition-all shadow-sm focus:outline-none"
+                        >
+                          👍 Fakta
+                        </button>
+                        <button
+                          onClick={() => handleVote(incident.id, 1)} // Hoax
+                          className="flex items-center justify-center gap-1.5 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-extrabold text-[10px] py-2 px-3 rounded-xl transition-all shadow-sm focus:outline-none"
+                        >
+                          👎 Hoax
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* Floating Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

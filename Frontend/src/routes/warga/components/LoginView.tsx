@@ -33,7 +33,7 @@ export function LoginView({
           <div className="flex justify-center">
             <img
               src="/img/icon.png"
-              alt="SI AMAN AI Logo"
+              alt="SI AMAN Logo"
               className="w-24 h-24 object-contain"
             />
           </div>

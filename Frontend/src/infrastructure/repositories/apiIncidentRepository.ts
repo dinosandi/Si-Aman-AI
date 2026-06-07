@@ -117,8 +117,9 @@ export class ApiIncidentRepository implements IncidentRepository {
         district: item.locationDescription || "",
       },
       status: mapBackendStatusToStatus(item.status),
-      upvotes: 0,
-      downvotes: 0,
+      upvotes: item.upvotes || 0,
+      downvotes: item.downvotes || 0,
+      votedUserIds: item.votedUserIds || [],
       reporterId: "",
       reporterName: item.reporterName,
       imageUrl: getAbsoluteImageUrl(item.imageUrl),
@@ -176,12 +177,39 @@ export class ApiIncidentRepository implements IncidentRepository {
         district: item.locationDescription || "",
       },
       status: mapBackendStatusToStatus(item.status),
-      upvotes: 0,
-      downvotes: 0,
+      upvotes: item.upvotes || 0,
+      downvotes: item.downvotes || 0,
+      votedUserIds: item.votedUserIds || [],
       reporterId: "",
       reporterName: item.reporterName,
       imageUrl: getAbsoluteImageUrl(item.imageUrl),
       createdAt: item.reportedAt,
     };
+  }
+
+  async verify(id: string): Promise<void> {
+    await httpClient.put(`/incidents/${id}/verify`);
+  }
+
+  async reject(id: string): Promise<void> {
+    await httpClient.put(`/incidents/${id}/reject`);
+  }
+
+  async resolve(id: string): Promise<void> {
+    await httpClient.put(`/incidents/${id}/resolve`);
+  }
+
+  async delete(id: string): Promise<void> {
+    await httpClient.delete(`/incidents/${id}`);
+  }
+
+  async vote(id: string, type: number): Promise<any> {
+    const response = await httpClient.post<any, any>(`/incidents/${id}/vote`, {
+      type,
+    });
+    if (!response.success) {
+      throw new Error(response.message || "Gagal memproses vote.");
+    }
+    return response.data;
   }
 }

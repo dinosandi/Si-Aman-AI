@@ -15,6 +15,7 @@ function WargaSOS() {
     try {
       setSosActivated(true);
       await triggerSOS();
+      localStorage.setItem("nav_is_sos_active", "true");
     } catch (err) {
       console.error(err);
     }

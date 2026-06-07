@@ -23,7 +23,7 @@ export function GettingStarted({ onStart }: GettingStartedProps) {
               Langkah Pertama menuju perjalanan aman dan nyaman
             </h2>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Si Aman AI memetakan keamanan Madiun secara real-time dari laporan
+              Si Aman memetakan keamanan Madiun secara real-time dari laporan
               Anda. Temukan rute teraman, bukan sekadar tercepat, dengan
               kekuatan AI dan komunitas
             </p>

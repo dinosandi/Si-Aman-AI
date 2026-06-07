@@ -28,6 +28,7 @@ export interface Report {
   status: ReportStatus;
   upvotes: number;
   downvotes: number;
+  votedUserIds?: string[];
   reporterId: string;
   reporterName?: string;
   imageUrl?: string;

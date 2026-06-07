@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { httpClient } from '../../infrastructure/api/httpClient';
+import { sosHubService } from '../../infrastructure/services/sosHubService';
 
 export interface SOSAlertResponse {
   id: string;
@@ -47,13 +47,20 @@ export const useEmergencySOS = () => {
       // 1. Get exact GPS coordinates first
       const coords = await getGPSLocation();
 
-      // 2. Post to API endpoint
-      const response = await httpClient.post<any, SOSAlertResponse>('/sos/trigger', {
+      // 2. Trigger SOS via SignalR Hub
+      await sosHubService.startConnection();
+      const alertId = await sosHubService.triggerSos(coords.lat, coords.lng);
+      localStorage.setItem("nav_active_sos_alert_id", alertId);
+
+      // Return simulated/mock response structure to satisfy component signature
+      return {
+        id: alertId,
+        citizenId: "current",
         latitude: coords.lat,
         longitude: coords.lng,
-      });
-
-      return response;
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+      };
     },
   });
 

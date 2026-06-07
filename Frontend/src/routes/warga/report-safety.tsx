@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm, useStore } from "@tanstack/react-form";
 import { z } from "zod";
 import { useState, useEffect, useRef } from "react";
@@ -48,7 +48,7 @@ const reportValidationSchema = z.object({
 
 function WargaReportSafety() {
   const createReport = useCreateReport();
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Map elements ref
@@ -70,11 +70,16 @@ function WargaReportSafety() {
     onSubmit: async ({ value }) => {
       try {
         const result = await createReport.mutateAsync(value);
-        setSuccessMessage(result.message);
+        localStorage.setItem("warga_toast_message", result.message || "Laporan berhasil terkirim dan dipublikasikan.");
+        localStorage.setItem("warga_toast_type", "success");
         setPreviewUrl(null);
         form.reset();
-      } catch (err) {
+        navigate({ to: "/warga" });
+      } catch (err: any) {
         console.error(err);
+        localStorage.setItem("warga_toast_message", err.message || "Gagal mengirim laporan kerawanan.");
+        localStorage.setItem("warga_toast_type", "error");
+        navigate({ to: "/warga" });
       }
     },
   });
@@ -180,27 +185,6 @@ function WargaReportSafety() {
         </div>
       </div>
 
-      {/* Success banner */}
-      {successMessage && (
-        <div className="p-4 bg-emerald-50 border border-emerald-250 rounded-2xl flex items-start gap-2.5 animate-fade-in-up">
-          <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="text-xs font-bold text-emerald-800">
-              Laporan Tercatat
-            </h4>
-            <p className="text-[10px] text-slate-500 leading-relaxed mt-1">
-              {successMessage}
-            </p>
-            <button
-              onClick={() => setSuccessMessage(null)}
-              className="text-[10px] text-emerald-600 font-bold underline mt-2"
-            >
-              Buat Laporan Baru
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Connection notification if offline */}
       {!navigator.onLine && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-2 text-[10px] text-amber-800">
@@ -212,8 +196,7 @@ function WargaReportSafety() {
         </div>
       )}
 
-      {!successMessage && (
-        <form
+      <form
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -530,7 +513,6 @@ function WargaReportSafety() {
             )}
           </form.Subscribe>
         </form>
-      )}
     </div>
   );
 }

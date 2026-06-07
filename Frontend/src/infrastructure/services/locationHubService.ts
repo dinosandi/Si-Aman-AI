@@ -12,8 +12,10 @@ export class LocationHubService {
   private connection: HubConnection | null = null;
   private startPromise: Promise<void> | null = null;
   private onUpdatedCallback: ((data: { latitude: number; longitude: number; updatedAt: string }) => void) | null = null;
+  private shouldBeConnected = false;
 
   async startConnection(): Promise<void> {
+    this.shouldBeConnected = true;
     if (this.connection && this.connection.state === HubConnectionState.Connected) {
       return;
     }
@@ -28,6 +30,7 @@ export class LocationHubService {
 
       this.connection = new HubConnectionBuilder()
         .withUrl(hubUrl, {
+          accessTokenFactory: () => localStorage.getItem("si_aman_token") || "",
           transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
           // Since we use withCredentials: true on Axios, SignalR connection also sends cookies automatically
           withCredentials: true,
@@ -52,6 +55,7 @@ export class LocationHubService {
   }
 
   async stopConnection(): Promise<void> {
+    this.shouldBeConnected = false;
     if (this.connection) {
       if (
         this.connection.state !== HubConnectionState.Disconnected &&
@@ -64,7 +68,9 @@ export class LocationHubService {
             // ignore startup errors
           }
         }
-        await this.connection.stop();
+        if (!this.shouldBeConnected) {
+          await this.connection.stop();
+        }
       }
     }
   }
