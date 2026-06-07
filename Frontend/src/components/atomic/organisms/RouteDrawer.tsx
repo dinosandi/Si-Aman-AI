@@ -14,6 +14,8 @@ interface Route {
   hazardCount: number;
   aiRecommendation: string;
   safetyLevel?: "safe" | "warning" | "danger";
+  isRecommended?: boolean;
+  routeName?: string;
 }
 
 interface RouteDrawerProps {
@@ -68,7 +70,7 @@ export function RouteDrawer({
             <span>{meta.label}</span>
           </span>
           <h4 className="font-black text-slate-800 text-sm mt-1.5 leading-tight">
-            {activeRoute.name}
+            {activeRoute.routeName || activeRoute.name}
           </h4>
         </div>
         <button
