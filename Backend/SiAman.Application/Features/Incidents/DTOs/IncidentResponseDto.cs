@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using SiAman.Domain.Enums;
 
 namespace SiAman.Application.Features.Incidents.DTOs;
@@ -18,4 +20,7 @@ public record IncidentResponseDto
     public DateTimeOffset? UpdatedAt { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public int Upvotes { get; set; }
+    public int Downvotes { get; set; }
+    public List<Guid> VotedUserIds { get; set; } = new List<Guid>();
 }

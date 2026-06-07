@@ -54,6 +54,10 @@ builder.Services.AddAuthentication(options =>
         OnMessageReceived = context =>
         {
             var token = context.Request.Cookies["access_token"];
+            if (string.IsNullOrEmpty(token))
+            {
+                token = context.Request.Query["access_token"];
+            }
             if (!string.IsNullOrEmpty(token))
                 context.Token = token;
             return Task.CompletedTask;
@@ -105,7 +109,11 @@ builder.Services.AddCors(options =>
 });
 
 // ── CONTROLLERS & SWAGGER 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 
@@ -167,7 +175,11 @@ builder.Services.AddHttpClient<IRouteProvider, OsrmRouteProvider>(client =>
 
 
 // WebSockets untuk real-time updates lokasi user
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals;
+    });
 builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
 

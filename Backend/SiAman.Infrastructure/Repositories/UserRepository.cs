@@ -3,6 +3,7 @@ using SiAman.Application.Common.Interfaces.Repository;
 using Microsoft.EntityFrameworkCore;
 using SiAman.Infrastructure.Persistence;
 using SiAman.Application.Common.Exceptions;
+using NetTopologySuite.Geometries;
 
 
 namespace SiAman.Infrastructure.Repositories
@@ -29,6 +30,14 @@ namespace SiAman.Infrastructure.Repositories
            CancellationToken cancellationToken)
            => await _context.Users
                .AsNoTracking()      // read-only, tidak perlu tracking
+               .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+       public async Task<Users?> GetByIdWithEmergencyContactsAsync(
+           Guid id,
+           CancellationToken cancellationToken)
+           => await _context.Users
+               .Include(u => u.EmergencyContacts)
+               .AsNoTracking()
                .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
         public async Task<Users> GetUserByEmail(string Email)
@@ -79,6 +88,22 @@ namespace SiAman.Infrastructure.Repositories
             await _context.SaveChangesAsync(ct);
 
             return user;
+        }
+
+        public async Task UpdateLocationAsync(Guid userId, double latitude, double longitude, Point location, CancellationToken ct = default)
+        {
+            var user = await _context.Users.FindAsync(new object[] { userId }, ct)
+                ?? throw new NotFoundException("User tidak ditemukan.");
+
+            user.CurrentLocation = location;
+            user.CurrentLatitude = latitude;
+            user.CurrentLongitude = longitude;
+            user.LastLocationUpdatedAt = DateTimeOffset.UtcNow;
+            user.LastActivityAt = DateTimeOffset.UtcNow;
+            user.UpdatedAt = DateTimeOffset.UtcNow;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync(ct);
         }
 
         public async Task<UserHomeLocations?> GetUserHomeLocationAsync(Guid userId)

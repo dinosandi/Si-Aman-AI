@@ -34,6 +34,7 @@ namespace SiAman.Infrastructure.Repositories
             return await _context.EmergencyAlerts
                 .Where(x => x.Status == StatusAlerts.Aktif)
                 .Include(x => x.User)
+                    .ThenInclude(u => u.EmergencyContacts)
                 .Include(x => x.Locations)
                 .OrderByDescending(x => x.TriggeredAt)
                 .ToListAsync(ct);

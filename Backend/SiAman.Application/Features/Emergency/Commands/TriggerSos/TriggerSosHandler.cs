@@ -31,7 +31,7 @@ namespace SiAman.Application.Features.Emergency.Commands.TriggerSos
         public async Task<ApiResponse<Guid>> Handle(
             TriggerSosCommand request, CancellationToken ct)
         {
-            var userId = _currentUserService.UserId;
+            var userId = request.UserId ?? _currentUserService.UserId;
             if (userId is null || userId == Guid.Empty)
                 return ApiResponse<Guid>.Failure("User tidak ditemukan");
 
@@ -40,7 +40,7 @@ namespace SiAman.Application.Features.Emergency.Commands.TriggerSos
             if (existing is not null)
                 return ApiResponse<Guid>.Failure("SOS sudah aktif");
 
-            var user = await _userRepository.GetByIdAsync(userId.Value, ct);
+            var user = await _userRepository.GetByIdWithEmergencyContactsAsync(userId.Value, ct);
 
             var alert = new EmergencyAlerts
             {
@@ -69,6 +69,9 @@ namespace SiAman.Application.Features.Emergency.Commands.TriggerSos
                 UserId = userId.Value,
                 UserName = user?.Name,
                 PhoneNumber = user?.PhoneNumber,
+                Address = user?.Address,
+                EmergencyPhoneNumber = user?.EmergencyContacts.FirstOrDefault(c => c.IsPrimary)?.ContactPhone 
+                                       ?? user?.EmergencyContacts.FirstOrDefault()?.ContactPhone,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 TriggeredAt = alert.TriggeredAt,

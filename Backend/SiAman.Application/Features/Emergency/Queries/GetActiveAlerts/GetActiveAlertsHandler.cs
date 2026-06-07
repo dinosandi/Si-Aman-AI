@@ -31,6 +31,9 @@ namespace SiAman.Application.Features.Emergency.Queries.GetActiveAlerts
                     UserId = a.UserId,
                     UserName = a.User.Name,
                     PhoneNumber = a.User.PhoneNumber,
+                    Address = a.User.Address,
+                    EmergencyPhoneNumber = a.User.EmergencyContacts.FirstOrDefault(c => c.IsPrimary)?.ContactPhone 
+                                           ?? a.User.EmergencyContacts.FirstOrDefault()?.ContactPhone,
                     Latitude = lastLoc?.Latitude ?? 0,
                     Longitude = lastLoc?.Longitude ?? 0,
                     TriggeredAt = a.TriggeredAt,

@@ -55,7 +55,10 @@ public class GetIncidentsHandler
                 Longitude = i.Longitude,
                 ImageUrl = i.ImageUrl,
                 Status = i.Status,
-                ReportedAt = i.ReportedAt
+                ReportedAt = i.ReportedAt,
+                Upvotes = i.Votes.Count(v => v.Type == Domain.Enums.TypeVote.Fakta),
+                Downvotes = i.Votes.Count(v => v.Type == Domain.Enums.TypeVote.Hoax),
+                VotedUserIds = i.Votes.Select(v => v.UserId).ToList()
             })
             .ToList();
 

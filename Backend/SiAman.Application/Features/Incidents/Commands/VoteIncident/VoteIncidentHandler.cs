@@ -64,10 +64,6 @@ public class VoteIncidentHandler
             throw new BadRequestException(
                 "Home location belum tersedia");
 
-        if (!homeLocation.IsVerified)
-            throw new BadRequestException(
-                "Home location belum diverifikasi");
-
         // Validasi radius maksimal 2KM
         var distance =
             homeLocation.HomeLocation!
@@ -111,7 +107,7 @@ public class VoteIncidentHandler
         }
         else if (invalidVotes >= 5)
         {
-            incident.Status = StatusIncidents.Berhasil;
+            incident.Status = StatusIncidents.Ditolak;
         }
 
         await _incidentRepository.SaveChangesAsync();

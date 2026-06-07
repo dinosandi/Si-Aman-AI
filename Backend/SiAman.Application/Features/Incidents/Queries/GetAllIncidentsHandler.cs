@@ -49,7 +49,10 @@ namespace SiAman.Application.Features.Incidents.Queries
                 ReportedAt = incident.ReportedAt,
                 UpdatedAt = incident.UpdatedAt,
                 ResolvedAt = incident.ResolvedAt,
-                CreatedAt = incident.CreatedAt
+                CreatedAt = incident.CreatedAt,
+                Upvotes = incident.Votes.Count(v => v.Type == Domain.Enums.TypeVote.Fakta),
+                Downvotes = incident.Votes.Count(v => v.Type == Domain.Enums.TypeVote.Hoax),
+                VotedUserIds = incident.Votes.Select(v => v.UserId).ToList()
             }).ToList();
 
             return new ApiResponse<List<IncidentResponseDto>>

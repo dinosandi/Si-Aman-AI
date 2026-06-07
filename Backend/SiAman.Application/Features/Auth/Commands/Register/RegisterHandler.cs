@@ -85,8 +85,9 @@ public class RegisterHandler
                     SRID = 4326
                 },
                 Address = request.Address,
+                IsVerified = true,
             });
-                }
+        }
 
         await _userRepository.AddUserAsync(user);
 

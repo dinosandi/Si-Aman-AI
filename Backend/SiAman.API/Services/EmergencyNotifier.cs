@@ -18,7 +18,7 @@ namespace SiAman.API.Services
             => _hub.Clients.Group("Admins").SendAsync("SosLocationUpdated", payload, ct);
 
         public Task NotifySosResolvedAsync(object payload, CancellationToken ct)
-            => _hub.Clients.Group("Admins").SendAsync("SosResolved", payload, ct);
+            => _hub.Clients.All.SendAsync("SosResolved", payload, ct);
     }
 
 }

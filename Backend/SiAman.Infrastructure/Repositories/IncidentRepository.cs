@@ -36,6 +36,7 @@ namespace SiAman.Infrastructure.Repositories
             var center = factory.CreatePoint(new Coordinate(lon, lat));
 
             return await _context.Incidents
+                .Include(i => i.Votes)
                 .Where(i => i.Geom.IsWithinDistance(center, radiusMeters))
                 .OrderByDescending(i => i.ReportedAt)
                 .AsNoTracking()
@@ -49,9 +50,22 @@ namespace SiAman.Infrastructure.Repositories
                 .FirstOrDefaultAsync(i => i.Id == id, ct);
         }
 
+        public async Task<Incidents?> GetByIdTrackedAsync(Guid id, CancellationToken ct = default)
+        {
+            return await _context.Incidents
+                .FirstOrDefaultAsync(i => i.Id == id, ct);
+        }
+
+        public async Task DeleteIncidentAsync(Incidents incident, CancellationToken ct = default)
+        {
+            _context.Incidents.Remove(incident);
+            await _context.SaveChangesAsync(ct);
+        }
+
         public async Task<List<Incidents>> GetAllIncidentsAsync(CancellationToken ct = default)
         {
             return await _context.Incidents
+                .Include(i => i.Votes)
                 .AsNoTracking()
                 .OrderByDescending(i => i.ReportedAt)
                 .ToListAsync(ct);
