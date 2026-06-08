@@ -59,9 +59,11 @@ namespace SiAman.Infrastructure.Services
 
             await PutFileAsync(remotePath, bytes, file.ContentType, ct);
 
-            // URL download langsung dari share Nextcloud (WebDAV download path)
-            // Format: <PublicShareUrl>/download?path=/&files=<folder>/<fileName>
-            return $"{_publicShareUrl}/download?path=%2F{Uri.EscapeDataString(folder)}&files={Uri.EscapeDataString(fileName)}";
+            // URL download file tunggal dari Nextcloud public share
+            // Format yang benar: /s/TOKEN/download?path=/folder/filename.jpg
+            // Jika share di-root di folder "SiAman", path relatif dimulai dari /incidents/...
+            var sharePath = $"/{folder}/{fileName}";
+            return $"{_publicShareUrl}/download?path={Uri.EscapeDataString(sharePath)}";
         }
 
         /// <summary>Upload via byte array.</summary>
