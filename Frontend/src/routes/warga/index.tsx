@@ -228,6 +228,7 @@ function WargaDashboard() {
 
       setIsSosActive(false);
       setShowSosDeactivationPopup(false);
+      setToast({ message: "SOS berhasil dinonaktifkan.", type: "success" });
       localStorage.removeItem("nav_is_sos_active");
       localStorage.removeItem("nav_active_sos_alert_id");
       await sosHubService.stopConnection();
@@ -569,6 +570,44 @@ function WargaDashboard() {
       }
       locationHubService.stopConnection();
       sosHubService.stopConnection();
+    };
+  }, []);
+
+  // Listener untuk ketika Admin menekan tombol "Selesaikan"
+  useEffect(() => {
+    const unsubscribe = sosHubService.onSosReceived(({ method, data }) => {
+      // Tangkap SosConfirmed dari backend untuk menyimpan alertId jika backend belum direbuild
+      if (method === "SosConfirmed") {
+        const confirmedAlertId = typeof data === "string" ? data : (data?.alertId || data?.AlertId);
+        if (confirmedAlertId) {
+          localStorage.setItem("nav_active_sos_alert_id", confirmedAlertId);
+        }
+      }
+
+      if (method === "SosResolved") {
+        const activeAlertId = localStorage.getItem("nav_active_sos_alert_id");
+        const targetAlertId = data.alertId || data.AlertId;
+
+        console.log("Warga Menerima SosResolved:", { activeAlertId, targetAlertId });
+
+        const cleanActiveId = String(activeAlertId).replace(/['"]+/g, '').trim().toLowerCase();
+        const cleanTargetId = String(targetAlertId).replace(/['"]+/g, '').trim().toLowerCase();
+
+        if (cleanActiveId && cleanTargetId && cleanActiveId === cleanTargetId) {
+          // Admin menyelesaikan SOS milik citizen ini
+          setIsSosActive(false);
+          setShowSosActivationPopup(false);
+          setShowSosDeactivationPopup(false);
+          setToast({ message: "Admin telah menyelesaikan status SOS Anda.", type: "success" });
+          localStorage.removeItem("nav_is_sos_active");
+          localStorage.removeItem("nav_active_sos_alert_id");
+          sosHubService.stopConnection().catch(() => {});
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
     };
   }, []);
 

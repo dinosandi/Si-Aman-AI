@@ -6,6 +6,8 @@ export interface RegisterInput {
   password: string;
   phone: string;
   emergencyPhone: string;
+  emergencyName?: string;
+  emergencyRelationship?: string;
   address: string;
   latitude?: number;
   longitude?: number;

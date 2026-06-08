@@ -168,7 +168,11 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regEmergencyPhone, setRegEmergencyPhone] = useState("");
+  const [regEmergencyName, setRegEmergencyName] = useState("");
+  const [regEmergencyRelationship, setRegEmergencyRelationship] = useState("");
   const [regAddress, setRegAddress] = useState("");
+  const [regLat, setRegLat] = useState<number | undefined>(-7.6167);
+  const [regLng, setRegLng] = useState<number | undefined>(111.65);
   const [regLatLong, setRegLatLong] = useState("");
 
   const auth = useAuth();
@@ -240,13 +244,19 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const coords = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const coords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         setRegLatLong(coords);
+        setRegLat(lat);
+        setRegLng(lng);
         setGpsLoading(false);
       },
       (err) => {
         console.warn("Geolocation failed, providing mock coords", err);
         setRegLatLong("-7.616700, 111.650000");
+        setRegLat(-7.6167);
+        setRegLng(111.65);
         setGpsLoading(false);
       },
       { enableHighAccuracy: true },
@@ -275,14 +285,16 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
       return;
     }
 
-    // Split LatLong if present
-    let lat: number | undefined;
-    let lng: number | undefined;
-    if (regLatLong) {
-      const parts = regLatLong.split(",");
-      if (parts.length === 2) {
-        lat = parseFloat(parts[0].trim());
-        lng = parseFloat(parts[1].trim());
+    // Use map lat/lng first, then parse from regLatLong text, then fallback
+    let lat: number | undefined = regLat;
+    let lng: number | undefined = regLng;
+    if (!lat || !lng) {
+      if (regLatLong) {
+        const parts = regLatLong.split(",");
+        if (parts.length === 2) {
+          lat = parseFloat(parts[0].trim());
+          lng = parseFloat(parts[1].trim());
+        }
       }
     }
 
@@ -293,6 +305,8 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         password: regPassword,
         phone: regPhone || "081234567890",
         emergencyPhone: regEmergencyPhone || "081234567899",
+        emergencyName: regEmergencyName || "Kontak Darurat",
+        emergencyRelationship: regEmergencyRelationship || "Keluarga",
         address: regAddress || "Madiun",
         latitude: lat,
         longitude: lng,
@@ -319,6 +333,7 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
           setView("register");
           setErrorMsg(null);
         }}
+        isLoggingIn={auth.isLoggingIn}
       />
     );
   }
@@ -338,10 +353,21 @@ function WargaAuthForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
         setRegPhone={setRegPhone}
         regEmergencyPhone={regEmergencyPhone}
         setRegEmergencyPhone={setRegEmergencyPhone}
+        regEmergencyName={regEmergencyName}
+        setRegEmergencyName={setRegEmergencyName}
+        regEmergencyRelationship={regEmergencyRelationship}
+        setRegEmergencyRelationship={setRegEmergencyRelationship}
         regAddress={regAddress}
         setRegAddress={setRegAddress}
         regLatLong={regLatLong}
         setRegLatLong={setRegLatLong}
+        regLat={regLat ?? -7.6167}
+        regLng={regLng ?? 111.65}
+        onMapPinMove={(lat, lng) => {
+          setRegLat(lat);
+          setRegLng(lng);
+          setRegLatLong(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        }}
         showPassword={showPassword}
         setShowPassword={setShowPassword}
         showConfirmPassword={showConfirmPassword}

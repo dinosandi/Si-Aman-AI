@@ -9,7 +9,6 @@ import {
   Maximize2,
   Minimize2,
   Phone,
-  PhoneOutgoing,
   Home,
   MapPin,
 } from "lucide-react";
@@ -43,7 +42,12 @@ interface ActiveSosUser {
   updatedAt: number;
   address?: string;
   phoneNumber?: string;
-  emergencyPhoneNumber?: string;
+  emergencyContacts?: Array<{
+    contactName: string;
+    contactPhone: string;
+    relationship?: string;
+    isPrimary: boolean;
+  }>;
 }
 
 function AdminDashboardHome() {
@@ -85,7 +89,7 @@ function AdminDashboardHome() {
             updatedAt: Date.now(),
             address: alert.address || alert.Address || "-",
             phoneNumber: alert.phoneNumber || alert.PhoneNumber || "-",
-            emergencyPhoneNumber: alert.emergencyPhoneNumber || alert.EmergencyPhoneNumber || "-",
+            emergencyContacts: alert.emergencyContacts || alert.EmergencyContacts || [],
           };
         }
       });
@@ -205,29 +209,45 @@ function AdminDashboardHome() {
         return;
       }
 
-      const userId = data.userId || data.UserId || "anonymous";
-      const name =
-        data.userName || data.name || data.reporterName || "Warga Si-Aman";
-      const lat = data.latitude || data.lat;
-      const lng = data.longitude || data.lng || data.lon;
+      let userId = data.userId || data.UserId;
       const alertId = data.alertId || data.AlertId;
 
-      if (lat && lng) {
-        setActiveSosUsers((prev) => ({
-          ...prev,
-          [userId]: {
-            userId,
-            alertId,
-            name,
-            latitude: lat,
-            longitude: lng,
-            updatedAt: Date.now(),
-            address: data.address || data.Address || prev[userId]?.address || "-",
-            phoneNumber: data.phoneNumber || data.PhoneNumber || prev[userId]?.phoneNumber || "-",
-            emergencyPhoneNumber: data.emergencyPhoneNumber || data.EmergencyPhoneNumber || prev[userId]?.emergencyPhoneNumber || "-",
-          },
-        }));
-      }
+      setActiveSosUsers((prev) => {
+        // Jika userId tidak ada (seperti pada SosLocationUpdated), coba cari dari alertId
+        if (!userId && alertId) {
+          const found = Object.values(prev).find((u) => u.alertId === alertId);
+          if (found) {
+            userId = found.userId;
+          }
+        }
+        
+        // Fallback jika tetap tidak ditemukan
+        userId = userId || "anonymous";
+
+        const name =
+          data.userName || data.name || data.reporterName || prev[userId]?.name || "Warga Si-Aman";
+        const lat = data.latitude || data.lat;
+        const lng = data.longitude || data.lng || data.lon;
+
+        if (lat && lng) {
+          return {
+            ...prev,
+            [userId]: {
+              userId,
+              alertId: alertId || prev[userId]?.alertId,
+              name,
+              latitude: lat,
+              longitude: lng,
+              updatedAt: Date.now(),
+              address: data.address || data.Address || prev[userId]?.address || "-",
+              phoneNumber: data.phoneNumber || data.PhoneNumber || prev[userId]?.phoneNumber || "-",
+              emergencyContacts: data.emergencyContacts || data.EmergencyContacts || prev[userId]?.emergencyContacts || [],
+            },
+          };
+        }
+        return prev;
+      });
+      
       refetchActiveSos();
     });
 
@@ -898,16 +918,43 @@ function AdminDashboardHome() {
                 </div>
                 <div>
                   <span className="font-bold text-slate-900">Alamat:</span>{" "}
-                  {selectedSosUser.address || "-"}
+                  {selectedSosUser.address && selectedSosUser.address !== "-"
+                    ? selectedSosUser.address
+                    : <span className="text-slate-400 italic">Belum diisi</span>}
                 </div>
                 <div>
-                  <span className="font-bold text-slate-900">No Hp:</span>{" "}
+                  <span className="font-bold text-slate-900">No HP:</span>{" "}
                   {selectedSosUser.phoneNumber || "-"}
                 </div>
-                <div>
-                  <span className="font-bold text-slate-900">No Darurat:</span>{" "}
-                  {selectedSosUser.emergencyPhoneNumber || "-"}
-                </div>
+
+                {/* Emergency Contacts List */}
+                {selectedSosUser.emergencyContacts && selectedSosUser.emergencyContacts.length > 0 ? (
+                  <div className="space-y-2">
+                    <span className="font-bold text-slate-900 block">Kontak Darurat:</span>
+                    {selectedSosUser.emergencyContacts.map((ec, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2 border ${ec.isPrimary ? "border-emerald-200 bg-emerald-50/60" : "border-slate-100"}`}
+                      >
+                        <div>
+                          <span className="font-bold text-slate-800 block text-xs">{ec.contactName}</span>
+                          <span className="text-[10px] text-slate-500">{ec.relationship || "Kontak"} • {ec.contactPhone}</span>
+                        </div>
+                        <button
+                          onClick={() => window.open(`tel:${ec.contactPhone}`)}
+                          className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-sm transition-all flex-shrink-0"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div>
+                    <span className="font-bold text-slate-900">No Darurat:</span>{" "}
+                    <span className="text-slate-400 italic">Tidak ada kontak darurat</span>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -931,25 +978,6 @@ function AdminDashboardHome() {
                   </span>
                 </button>
 
-                {/* No Darurat */}
-                <button
-                  onClick={() => {
-                    if (selectedSosUser.emergencyPhoneNumber && selectedSosUser.emergencyPhoneNumber !== "-") {
-                      window.open(`tel:${selectedSosUser.emergencyPhoneNumber}`);
-                    } else {
-                      setToast({ message: "No Kontak Darurat tidak tersedia.", type: "error" });
-                    }
-                  }}
-                  className="flex flex-col items-center gap-1.5 group focus:outline-none"
-                >
-                  <div className="w-12 h-12 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all">
-                    <PhoneOutgoing className="w-5 h-5" />
-                  </div>
-                  <span className="text-[9px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">
-                    No Darurat
-                  </span>
-                </button>
-
                 {/* Alamat Rumah */}
                 <button
                   onClick={() => {
@@ -970,6 +998,7 @@ function AdminDashboardHome() {
                 </button>
 
                 {/* Lokasi Terakhir */}
+                {/* Lokasi Terakhir */}
                 <button
                   onClick={() => {
                     if (mapInstanceRef.current) {
@@ -984,6 +1013,29 @@ function AdminDashboardHome() {
                   </div>
                   <span className="text-[9px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">
                     Lokasi Terakhir
+                  </span>
+                </button>
+
+                {/* Selesaikan SOS */}
+                <button
+                  onClick={async () => {
+                    if (selectedSosUser.alertId) {
+                      try {
+                        await sosHubService.resolveSos(selectedSosUser.alertId);
+                        setToast({ message: "Status SOS berhasil diselesaikan.", type: "success" });
+                        setSelectedSosUser(null);
+                      } catch (err) {
+                        setToast({ message: "Gagal menyelesaikan SOS.", type: "error" });
+                      }
+                    }
+                  }}
+                  className="flex flex-col items-center gap-1.5 group focus:outline-none"
+                >
+                  <div className="w-12 h-12 bg-slate-700 hover:bg-slate-800 active:bg-slate-900 text-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">
+                    Selesaikan
                   </span>
                 </button>
               </div>

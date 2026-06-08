@@ -12,6 +12,7 @@ interface LoginViewProps {
   onSubmit: (e: React.FormEvent) => void;
   onGoogleLogin: () => void;
   onSwitchToRegister: () => void;
+  isLoggingIn?: boolean;
 }
 
 export function LoginView({
@@ -25,6 +26,7 @@ export function LoginView({
   onSubmit,
   onGoogleLogin,
   onSwitchToRegister,
+  isLoggingIn,
 }: LoginViewProps) {
   return (
     <div className="flex-1 flex flex-col justify-between h-full py-2 overflow-y-auto">
@@ -108,9 +110,17 @@ export function LoginView({
           {/* Submit button */}
           <button
             type="submit"
-            className="w-full py-3.5 bg-[#114B5F] hover:bg-[#0e3b4b] text-white font-bold text-xs rounded-xl transition-colors tracking-wide"
+            disabled={isLoggingIn}
+            className="w-full py-3.5 bg-[#114B5F] hover:bg-[#0e3b4b] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-colors tracking-wide flex justify-center items-center gap-2"
           >
-            Masuk
+            {isLoggingIn ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Masuk...</span>
+              </>
+            ) : (
+              <span>Masuk</span>
+            )}
           </button>
 
           {/* Divider */}

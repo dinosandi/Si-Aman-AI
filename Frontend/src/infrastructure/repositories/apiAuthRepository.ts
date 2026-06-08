@@ -57,9 +57,9 @@ export class ApiAuthRepository implements AuthRepository {
       phoneNumber: input.phone,
       emergencyContacts: [
         {
-          contactName: "Kontak Utama",
+          contactName: input.emergencyName || "Kontak Utama",
           contactPhone: input.emergencyPhone,
-          relationship: "Keluarga",
+          relationship: input.emergencyRelationship || "Keluarga",
           isPrimary: true,
         },
       ],

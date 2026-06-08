@@ -188,15 +188,18 @@ export class ApiIncidentRepository implements IncidentRepository {
   }
 
   async verify(id: string): Promise<void> {
-    await httpClient.put(`/incidents/${id}/verify`);
+    // StatusIncidents.Terverifikasi = 1
+    await httpClient.put(`/incidents/${id}`, { status: 1 });
   }
 
   async reject(id: string): Promise<void> {
-    await httpClient.put(`/incidents/${id}/reject`);
+    // StatusIncidents.Ditolak = 2
+    await httpClient.put(`/incidents/${id}`, { status: 2 });
   }
 
   async resolve(id: string): Promise<void> {
-    await httpClient.put(`/incidents/${id}/resolve`);
+    // StatusIncidents.Berhasil = 3
+    await httpClient.put(`/incidents/${id}`, { status: 3 });
   }
 
   async delete(id: string): Promise<void> {
