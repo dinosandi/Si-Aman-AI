@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install dependensi
-RUN npm ci
+RUN npm install --no-audit --no-fund --loglevel=error
 
 # Copy seluruh file project
 COPY . .
