@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SiAman.Application.Features.Incidents.Commands.CreateIncident;
+using SiAman.Application.Features.Incidents.Commands.DeleteIncident;
+using SiAman.Application.Features.Incidents.Commands.UpdateIncident;
 using SiAman.Application.Features.Incidents.Commands.VoteIncident;
 using SiAman.Application.Features.Incidents.DTOs;
 using SiAman.Application.Features.Incidents.Queries;
@@ -19,25 +21,6 @@ namespace SiAman.API.Controller
         {
             _mediator = mediator;
         }
-
-        [HttpPost("{id}/vote")]
-        public async Task<IActionResult> Vote(
-    Guid id,
-    [FromBody] IncidentVoteDto dto)
-        {
-            var command = new VoteIncidentCommand
-            {
-                IncidentId = id,
-                Type = dto.Type
-            };
-
-            var result = await _mediator.Send(command);
-
-            return Ok(result);
-        }
-
-
-
         [HttpPost]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Create([FromForm] CreateIncidentDto dto)
@@ -56,6 +39,43 @@ namespace SiAman.API.Controller
             var result = await _mediator.Send(command);
             return result.Success ? Ok(result) : BadRequest(result);
         }
+
+        [HttpPost("{id}/vote")]
+        public async Task<IActionResult> Vote(
+    Guid id,
+    [FromBody] IncidentVoteDto dto)
+        {
+            var command = new VoteIncidentCommand
+            {
+                IncidentId = id,
+                Type = dto.Type
+            };
+
+            var result = await _mediator.Send(command);
+
+            return Ok(result);
+        }
+
+        [HttpPut("{id:guid}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateIncident(
+    Guid id,
+    [FromForm] UpdateIncidentDto dto)
+        {
+            var result = await _mediator.Send(new UpdateIncidentCommand(id, dto.Status));
+            return Ok(new { Success = true,  Message = "Incident berhasil diperbarui.", Data = result });
+        }
+
+        [HttpDelete("{id:guid}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteIncident(Guid id)
+        {
+            var result = await _mediator.Send(new DeleteIncidentCommand(id));
+            return Ok(new { Success = true, Message = "Incident berhasil dihapus." });
+        }
+
+
+
 
         // mengambil laporan insiden terdekat berdasarkan koordinat dan radius
         [HttpGet("nearby")]

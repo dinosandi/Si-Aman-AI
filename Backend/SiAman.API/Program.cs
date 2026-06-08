@@ -155,22 +155,23 @@ builder.Services.AddValidatorsFromAssembly(
 
 
 //
-builder.Services.AddHttpClient<IRouteProvider, OsrmRouteProvider>(client =>
+builder.Services.AddHttpClient("Osrm", client =>
 {
     client.BaseAddress = new Uri(
         builder.Configuration["Osrm:BaseUrl"] ?? "http://router.project-osrm.org/");
     client.Timeout = TimeSpan.FromMinutes(5);
-    client.DefaultRequestHeaders.Add(
-        "User-Agent",
-        "SiAman/1.0");
+    client.DefaultRequestHeaders.Add("User-Agent", "SiAman/1.0");
 });
+
+builder.Services.AddScoped<OsrmRouteProvider>();
+builder.Services.AddScoped<DatabaseRouteProvider>();
+builder.Services.AddScoped<IRouteProvider, CompositeRouteProvider>();
+
 
 
 // WebSockets untuk real-time updates lokasi user
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
-
-
 
 // ── APPLICATION SERVICES 
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();

@@ -85,8 +85,10 @@ public class RegisterHandler
                     SRID = 4326
                 },
                 Address = request.Address,
+                IsVerified = true,
+                CreatedAt = DateTimeOffset.UtcNow,
             });
-                }
+            }
 
         await _userRepository.AddUserAsync(user);
 
@@ -96,13 +98,9 @@ public class RegisterHandler
             new AuthResponse
             {
                 UserId = user.Id,
-
                 Name = user.Name,
-
                 Email = user.Email,
-
                 Role = user.Role.ToString(),
-
                 IsProfileCompleted = true
             },
             "Registrasi berhasil.");

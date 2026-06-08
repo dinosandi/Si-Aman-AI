@@ -98,6 +98,7 @@ public class VoteIncidentHandler
             await _incidentRepository.CountVotesAsync(
                 incident.Id,
                 TypeVote.Fakta);
+        Console.WriteLine($"Valid Votes: {validVotes}");
 
         var invalidVotes =
             await _incidentRepository.CountVotesAsync(
@@ -111,7 +112,7 @@ public class VoteIncidentHandler
         }
         else if (invalidVotes >= 5)
         {
-            incident.Status = StatusIncidents.Berhasil;
+            incident.Status = StatusIncidents.Ditolak;
         }
 
         await _incidentRepository.SaveChangesAsync();
@@ -125,8 +126,8 @@ public class VoteIncidentHandler
         };
 
         // REALTIME
-await _incidentNotifier
-    .NotifyIncidentVoteUpdatedAsync(result);
+        await _incidentNotifier
+            .NotifyIncidentVoteUpdatedAsync(result);
 
 
         return ApiResponse<IncidentVoteResultDto>

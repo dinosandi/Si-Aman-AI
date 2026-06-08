@@ -20,9 +20,12 @@ namespace SiAman.Application.Common.Interfaces.Repository
         Task<bool> HasUserVotedAsync(Guid incidentId, Guid userId);
 
         Task AddVoteAsync(IncidentsVote vote);
+        Task UpdateAsync(Incidents incident, CancellationToken ct = default);
+
 
         Task<int> CountVotesAsync(Guid incidentId, TypeVote type);
         Task<List<Incidents>> GetAllIncidentsAsync(CancellationToken ct = default);
+        Task DeleteIncidentAsync(Incidents incident, CancellationToken ct = default);
         Task SaveChangesAsync();
 
     }

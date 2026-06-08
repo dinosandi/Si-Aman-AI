@@ -45,17 +45,32 @@ namespace SiAman.Infrastructure.Repositories
         public async Task<Incidents?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
             return await _context.Incidents
-                .AsNoTracking()
                 .FirstOrDefaultAsync(i => i.Id == id, ct);
         }
 
         public async Task<List<Incidents>> GetAllIncidentsAsync(CancellationToken ct = default)
         {
             return await _context.Incidents
+
                 .AsNoTracking()
+
+                .Include(x => x.User)
+
+                .Include(x => x.Votes)
+                    .ThenInclude(v => v.User)
+
                 .OrderByDescending(i => i.ReportedAt)
+
                 .ToListAsync(ct);
         }
+
+        public async Task DeleteIncidentAsync(Incidents incident, CancellationToken ct = default)
+        {
+            _context.Incidents.Remove(incident);
+            await _context.SaveChangesAsync(ct);
+        }
+
+
 
         public async Task<List<Incidents>> GetNearbyIncidentsAlongRouteAsync(
             Geometry routeGeometry,
@@ -96,6 +111,13 @@ namespace SiAman.Infrastructure.Repositories
                     x.IncidentId == incidentId &&
                     x.Type == type);
         }
+
+        public async Task UpdateAsync(Incidents incident, CancellationToken ct = default)
+        {
+            _context.Incidents.Update(incident);
+            await _context.SaveChangesAsync(ct);
+        }
+
         public async Task SaveChangesAsync()
 
         {

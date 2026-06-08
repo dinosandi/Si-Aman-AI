@@ -13,6 +13,7 @@ namespace SiAman.Application.Common.Interfaces.Service
         IFormFile file,
         string folder,
         CancellationToken ct = default);
+        Task DeleteAsync(string filePath, CancellationToken cancellationToken);
   
 
     }

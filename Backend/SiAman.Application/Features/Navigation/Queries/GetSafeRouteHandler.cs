@@ -1,6 +1,5 @@
 using System.Text.Json;
 using MediatR;
-using NetTopologySuite.Geometries;
 using SiAman.Application.Common.Interfaces.Repository;
 using SiAman.Application.Common.Interfaces.Service;
 using SiAman.Application.Common.Models;

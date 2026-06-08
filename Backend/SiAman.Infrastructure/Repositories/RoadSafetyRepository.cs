@@ -65,5 +65,27 @@ namespace SiAman.Infrastructure.Repositories
             await _context.SaveChangesAsync(ct);
         }
 
+        public async Task<List<RoadSafetySegments>> GetSegmentsBetweenPointsAsync(
+    double originLat, double originLng,
+    double destinationLat, double destinationLng,
+    double bufferDegrees = 0.02)
+{
+    // Bounding box + sedikit buffer agar jalan sekitar ikut masuk
+    var minLat = Math.Min(originLat, destinationLat) - bufferDegrees;
+    var maxLat = Math.Max(originLat, destinationLat) + bufferDegrees;
+    var minLng = Math.Min(originLng, destinationLng) - bufferDegrees;
+    var maxLng = Math.Max(originLng, destinationLng) + bufferDegrees;
+
+    var bbox = new Envelope(minLng, maxLng, minLat, maxLat);
+    var bboxGeom = new GeometryFactory(new PrecisionModel(), 4326)
+        .ToGeometry(bbox);
+
+    return await _context.RoadSafetySegments
+        .Where(s => s.Geom.Intersects(bboxGeom))
+        .OrderBy(s => s.SafetyScore)
+        .ToListAsync();
+}
+
+
     }
 }
