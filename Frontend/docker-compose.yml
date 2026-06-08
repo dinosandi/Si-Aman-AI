@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  siaman-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Ganti dengan URL API backend yang sebenarnya jika diperlukan di production
+        # VITE_API_URL: https://api.siaman.madiunkab.go.id/v1
+    container_name: siaman_frontend_prod
+    ports:
+      - "3000:80" # Akses frontend di host port 3000
+    restart: unless-stopped
+    networks:
+      - siaman_net
+
+networks:
+  siaman_net:
+    driver: bridge
