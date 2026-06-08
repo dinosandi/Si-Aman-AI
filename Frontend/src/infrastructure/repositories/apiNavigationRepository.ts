@@ -67,10 +67,11 @@ const mapBackendSafetyLevel = (level: string): RouteSafetyLevel => {
 };
 
 export class ApiNavigationRepository implements NavigationRepository {
-  async getSafeRoute(destLat: number, destLng: number): Promise<SafetyRoute[]> {
+  async getSafeRoute(destLat: number, destLng: number, maxAlternatives: number = 1): Promise<SafetyRoute[]> {
     const response = await httpClient.post<any, ApiResponse<SafeRouteWithAlternativesDto>>("/navigation/safe-route", {
       destinationLatitude: destLat,
       destinationLongitude: destLng,
+      maxAlternatives,
     });
 
     if (!response.success || !response.data) {

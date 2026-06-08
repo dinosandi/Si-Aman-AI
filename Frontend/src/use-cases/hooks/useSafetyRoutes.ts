@@ -136,10 +136,30 @@ const fetchSafetyRoutes = async (
   const cacheKey = `${ROUTE_CACHE_KEY}_${params.startLat}_${params.startLng}_${params.endLat}_${params.endLng}`;
 
   try {
-    const response = await navigationRepository.getSafeRoute(
+    // Step 1: fetch with default 1 alternative to check for incidents
+    const firstResponse = await navigationRepository.getSafeRoute(
       params.endLat,
       params.endLng,
+      1,
     );
+
+    // Step 2: determine maxAlternatives based on incident presence
+    const hasIncident = firstResponse.some((r) => r.hazardCount > 0);
+    let maxAlternatives = 1;
+    if (hasIncident) {
+      // cap at 3
+      maxAlternatives = Math.min(firstResponse.reduce((acc, r) => acc + (r.hazardCount > 0 ? 1 : 0), 1) + 1, 3);
+    }
+
+    // Step 3: if more alternatives needed, re-fetch with higher count
+    let response = firstResponse;
+    if (maxAlternatives > 1) {
+      response = await navigationRepository.getSafeRoute(
+        params.endLat,
+        params.endLng,
+        maxAlternatives,
+      );
+    }
 
     // Cache the fresh result locally in IndexedDB for offline usage
     if (response && response.length > 0) {
@@ -182,5 +202,6 @@ export const useSafetyRoutes = (params: RouteRequestInput | null) => {
       !!params.endLng,
     staleTime: 5 * 60 * 1000, // 5 minutes fresh time
     refetchOnWindowFocus: false,
+    gcTime: 5 * 60 * 1000,
   });
 };

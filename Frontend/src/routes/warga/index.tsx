@@ -729,7 +729,7 @@ function WargaDashboard() {
   }, []);
 
   // Fetch safety routes recommendation
-  const { data: routes } = useSafetyRoutes(routeParams);
+  const { data: routes, isFetching: isFetchingRoutes } = useSafetyRoutes(routeParams);
 
   // Update map on route or coordinate changes
   useEffect(() => {
@@ -982,6 +982,121 @@ function WargaDashboard() {
       {/* Full-screen Map Container */}
       <div ref={mapRef} className="w-full h-full z-0 absolute inset-0" />
 
+      {/* AI Safe Route Loading Overlay */}
+      {isFetchingRoutes && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, rgba(2,8,23,0.92) 0%, rgba(5,30,52,0.95) 50%, rgba(2,15,35,0.92) 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+          }}
+        >
+          {/* Animated radar rings */}
+          <div style={{ position: 'relative', width: 140, height: 140, marginBottom: 32 }}>
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '50%',
+                  border: '2px solid rgba(16,185,129,0.4)',
+                  animation: `ping 2s ease-out ${i * 0.6}s infinite`,
+                  transform: 'scale(1)',
+                }}
+              />
+            ))}
+            {/* Shield icon center */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <div style={{
+                width: 72,
+                height: 72,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #059669, #10b981)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 40px rgba(16,185,129,0.6), 0 0 80px rgba(16,185,129,0.2)',
+                animation: 'pulse 2s ease-in-out infinite',
+              }}>
+                <ShieldCheck style={{ width: 36, height: 36, color: 'white' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Text */}
+          <div style={{ textAlign: 'center', padding: '0 32px', maxWidth: 360 }}>
+            <p style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.15em',
+              color: '#10b981',
+              textTransform: 'uppercase',
+              marginBottom: 8,
+            }}>AI Navigation</p>
+            <h2 style={{
+              fontSize: 20,
+              fontWeight: 900,
+              color: 'white',
+              marginBottom: 10,
+              lineHeight: 1.3,
+            }}>AI sedang mencarikan rute teraman untukmu</h2>
+            <p style={{
+              fontSize: 12,
+              color: 'rgba(148,163,184,0.9)',
+              fontWeight: 500,
+              lineHeight: 1.6,
+            }}>Menganalisis insiden, skor keamanan jalan,<br />dan menghitung alternatif rute terbaik…</p>
+          </div>
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 32 }}>
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#10b981',
+                  animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                  opacity: 0.8,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Inline keyframes via style tag */}
+          <style>{`
+            @keyframes ping {
+              0% { transform: scale(0.8); opacity: 0.8; }
+              100% { transform: scale(2.2); opacity: 0; }
+            }
+            @keyframes pulse {
+              0%, 100% { box-shadow: 0 0 40px rgba(16,185,129,0.6), 0 0 80px rgba(16,185,129,0.2); }
+              50% { box-shadow: 0 0 60px rgba(16,185,129,0.9), 0 0 120px rgba(16,185,129,0.4); }
+            }
+            @keyframes bounce {
+              0%, 100% { transform: translateY(0); opacity: 0.5; }
+              50% { transform: translateY(-10px); opacity: 1; }
+            }
+          `}</style>
+        </div>,
+        document.body
+      )}
       {/* Floating Header: Search, Notification Bell, and Suggestions */}
       {!isNavigating && (
         <div className="absolute top-4 left-4 right-4 z-[1001] flex flex-col gap-1.5 pointer-events-auto">
