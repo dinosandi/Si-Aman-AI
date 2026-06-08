@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SiAman.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ec0437e20713cb0e0e52c8f0aa3399abcb4a41d9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+63e3c36c586024b5cd991b675357709a4b4e1c4f")]
 [assembly: System.Reflection.AssemblyProductAttribute("SiAman.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SiAman.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
