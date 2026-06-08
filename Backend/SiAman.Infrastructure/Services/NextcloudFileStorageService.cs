@@ -70,8 +70,9 @@ namespace SiAman.Infrastructure.Services
             string fileName,
             CancellationToken ct = default)
         {
-            await PutFileAsync(fileName, fileData, "application/octet-stream", ct);
-            return $"{_publicShareUrl}/download?path=%2F&files={Uri.EscapeDataString(fileName)}";
+            var remotePath = string.IsNullOrEmpty(_baseFolder) ? fileName : $"{_baseFolder}/{fileName}";
+            await PutFileAsync(remotePath, fileData, "application/octet-stream", ct);
+            return $"{_apiBaseUrl}/api/media/{remotePath.TrimStart('/')}";
         }
 
         public Task DeleteAsync(string fileUrl, CancellationToken ct = default)
