@@ -10,6 +10,6 @@ public class GetSafeRouteQuery
     public double DestinationLatitude  { get; set; }
     public double DestinationLongitude { get; set; }
 
-    // ← tambah ini, default 3 alternatif
-    public int MaxAlternatives { get; set; } = 3;
+    // default 1 alternatif, frontend akan naikkan ke 2-3 jika ada insiden
+    public int MaxAlternatives { get; set; } = 1;
 }

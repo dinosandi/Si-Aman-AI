@@ -28,6 +28,7 @@ namespace SiAman.Infrastructure.Repositories
            Guid id,
            CancellationToken cancellationToken)
            => await _context.Users
+               .Include(u => u.EmergencyContacts)
                .AsNoTracking()      // read-only, tidak perlu tracking
                .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 

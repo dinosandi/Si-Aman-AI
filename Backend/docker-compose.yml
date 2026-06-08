@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: siaman-postgis
+    environment:
+      - POSTGRES_DB=SiAman
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=11223344
+    ports:
+      - "5433:5432"
+    volumes:
+      - siaman_postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: siaman-api
+    ports:
+      - "5105:5105"
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=SiAman;Username=postgres;Password=11223344
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: siaman-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+
+volumes:
+  siaman_postgres_data:
+  pgadmin_data:

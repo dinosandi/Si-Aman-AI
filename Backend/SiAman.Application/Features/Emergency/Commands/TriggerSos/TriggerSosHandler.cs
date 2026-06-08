@@ -69,9 +69,17 @@ namespace SiAman.Application.Features.Emergency.Commands.TriggerSos
                 UserId = userId.Value,
                 UserName = user?.Name,
                 PhoneNumber = user?.PhoneNumber,
+                Address = user?.Address,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 TriggeredAt = alert.TriggeredAt,
+                EmergencyContacts = user?.EmergencyContacts?.Select(ec => new EmergencyContactInfoDto
+                {
+                    ContactName = ec.ContactName,
+                    ContactPhone = ec.ContactPhone,
+                    Relationship = ec.Relationship,
+                    IsPrimary = ec.IsPrimary
+                }).ToList() ?? new List<EmergencyContactInfoDto>()
             }, ct);
 
             return ApiResponse<Guid>.SuccessResponse(alert.Id, "SOS berhasil dikirim");

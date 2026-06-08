@@ -31,9 +31,18 @@ namespace SiAman.Application.Features.Emergency.Queries.GetActiveAlerts
                     UserId = a.UserId,
                     UserName = a.User.Name,
                     PhoneNumber = a.User.PhoneNumber,
+                    Address = a.User.Address,
                     Latitude = lastLoc?.Latitude ?? 0,
                     Longitude = lastLoc?.Longitude ?? 0,
                     TriggeredAt = a.TriggeredAt,
+                    EmergencyContacts = a.User.EmergencyContacts
+                        .Select(ec => new EmergencyContactInfoDto
+                        {
+                            ContactName = ec.ContactName,
+                            ContactPhone = ec.ContactPhone,
+                            Relationship = ec.Relationship,
+                            IsPrimary = ec.IsPrimary
+                        }).ToList()
                 };
             }).ToList();
 

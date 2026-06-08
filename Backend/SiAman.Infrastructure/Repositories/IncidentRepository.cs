@@ -37,6 +37,9 @@ namespace SiAman.Infrastructure.Repositories
 
             return await _context.Incidents
                 .Where(i => i.Geom.IsWithinDistance(center, radiusMeters))
+                .Include(x => x.User)
+                .Include(x => x.Votes)
+                    .ThenInclude(v => v.User)
                 .OrderByDescending(i => i.ReportedAt)
                 .AsNoTracking()
                 .ToListAsync(ct);

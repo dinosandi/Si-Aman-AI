@@ -29,13 +29,14 @@ public class SosHub : Hub
     }
 
     // ── User: tekan tombol SOS ─────────────────────────────────────
-    public async Task TriggerSos(double latitude, double longitude)
+    public async Task<Guid> TriggerSos(double latitude, double longitude)
     {
         var result = await _mediator.Send(new TriggerSosCommand(latitude, longitude));
         if (!result.Success) throw new HubException(result.Message);
 
         Context.Items["AlertId"] = result.Data; // simpan di session
         await Clients.Caller.SendAsync("SosConfirmed", result.Data);
+        return result.Data;
     }
 
     // ── User: update lokasi real-time (panggil tiap ~5 detik) ──────

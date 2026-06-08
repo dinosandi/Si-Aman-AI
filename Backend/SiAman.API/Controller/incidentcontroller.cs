@@ -60,10 +60,10 @@ namespace SiAman.API.Controller
         [Authorize]
         public async Task<IActionResult> UpdateIncident(
     Guid id,
-    [FromForm] UpdateIncidentDto dto)
+    [FromBody] UpdateIncidentDto dto)
         {
             var result = await _mediator.Send(new UpdateIncidentCommand(id, dto.Status));
-            return Ok(new { Success = true,  Message = "Incident berhasil diperbarui.", Data = result });
+            return Ok(new { Success = true, Message = "Incident berhasil diperbarui.", Data = result });
         }
 
         [HttpDelete("{id:guid}")]
