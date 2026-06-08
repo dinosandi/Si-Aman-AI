@@ -21,6 +21,7 @@ namespace SiAman.Infrastructure.Services
         private readonly string _publicShareUrl;
         private readonly string _username;
         private readonly string _password;
+        private readonly string _baseFolder;
 
         public NextcloudFileStorageService(
             IHttpClientFactory httpClientFactory,
@@ -33,6 +34,7 @@ namespace SiAman.Infrastructure.Services
             _publicShareUrl = section["PublicShareUrl"]  ?? throw new InvalidOperationException("Nextcloud:PublicShareUrl tidak dikonfigurasi.");
             _username       = section["Username"]        ?? throw new InvalidOperationException("Nextcloud:Username tidak dikonfigurasi.");
             _password       = section["Password"]        ?? throw new InvalidOperationException("Nextcloud:Password tidak dikonfigurasi.");
+            _baseFolder     = (section["BaseFolder"] ?? "").Trim('/');
         }
 
         /// <summary>Upload via IFormFile (dipakai CreateIncidentHandler).</summary>
@@ -49,7 +51,11 @@ namespace SiAman.Infrastructure.Services
             var ext      = Path.GetExtension(file.FileName).ToLowerInvariant();
             var shortId  = Guid.NewGuid().ToString("N")[..8];
             var fileName = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmss}_{shortId}{ext}";
-            var remotePath = $"{folder}/{fileName}";
+
+            // Gabungkan BaseFolder + folder + filename
+            var remotePath = string.IsNullOrEmpty(_baseFolder)
+                ? $"{folder}/{fileName}"
+                : $"{_baseFolder}/{folder}/{fileName}";
 
             await PutFileAsync(remotePath, bytes, file.ContentType, ct);
 
