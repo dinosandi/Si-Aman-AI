@@ -98,7 +98,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://siaman.danipinion.my.id",
+                "https://apisiaman.danipinion.my.id")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -196,7 +199,20 @@ builder.Services.AddScoped<ISafetyScoreService, SafetyScoreService>();
 builder.Services.AddScoped<ISafetyScoreService, SafetyScoreService>();
 
 builder.Services.AddScoped<IIncidentRepository, IncidentRepository>();
-builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IFileStorageService, NextcloudFileStorageService>();
+
+// ── NEXTCLOUD HTTP CLIENT
+var ncSection = builder.Configuration.GetSection("Nextcloud");
+var ncUsername = ncSection["Username"] ?? "";
+var ncPassword = ncSection["Password"] ?? "";
+var ncBasicAuth = Convert.ToBase64String(
+    System.Text.Encoding.UTF8.GetBytes($"{ncUsername}:{ncPassword}"));
+builder.Services.AddHttpClient("Nextcloud", client =>
+{
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", ncBasicAuth);
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
 
 
 

@@ -82,6 +82,29 @@ namespace SiAman.Infrastructure.Repositories
             return user;
         }
 
+        public async Task UpdateLocationAsync(
+            Guid userId,
+            NetTopologySuite.Geometries.Point point,
+            double latitude,
+            double longitude,
+            CancellationToken ct = default)
+        {
+            var user = await _context.Users.FindAsync(new object[] { userId }, ct)
+                ?? throw new NotFoundException("User tidak ditemukan.");
+
+            var now = DateTimeOffset.UtcNow;
+            user.CurrentLocation       = point;
+            user.CurrentLatitude       = latitude;
+            user.CurrentLongitude      = longitude;
+            user.LastLocationUpdatedAt = now;
+            user.IsOnline              = true;
+            user.LastActivityAt        = now;
+            user.UpdatedAt             = now;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync(ct);
+        }
+
         public async Task<UserHomeLocations?> GetUserHomeLocationAsync(Guid userId)
         {
             return await _context.UserHomeLocations

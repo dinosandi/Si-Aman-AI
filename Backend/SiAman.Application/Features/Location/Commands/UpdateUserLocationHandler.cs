@@ -44,13 +44,13 @@ namespace SiAman.Application.Features.Location.Commands
             var point = _geometryFactory.CreatePoint(
                 new Coordinate(request.Longitude, request.Latitude));
 
-            // ── 1. Update cache lokasi terkini di tabel Users 
-            user.CurrentLocation          = point;
-            user.CurrentLatitude          = request.Latitude;
-            user.CurrentLongitude         = request.Longitude;
-            user.LastLocationUpdatedAt    = DateTimeOffset.UtcNow;
-
-            await _userRepository.UpdateAsync(user.Id, cancellationToken);
+            // ── 1. Update cache lokasi terkini di tabel Users
+            await _userRepository.UpdateLocationAsync(
+                request.UserId,
+                point,
+                request.Latitude,
+                request.Longitude,
+                cancellationToken);
 
             // ── 2. Simpan riwayat ke UserLocations 
             var locationHistory = new UserLocations
