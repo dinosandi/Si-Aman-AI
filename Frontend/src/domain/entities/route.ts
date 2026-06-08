@@ -27,6 +27,8 @@ export interface SafetyRoute {
   aiRecommendation: string;
   safetyFactors: SafetyFactor[];
   createdAt: string;
+  isRecommended?: boolean;
+  routeName?: string;
 }
 
 export interface RouteRequestInput {
