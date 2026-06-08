@@ -59,10 +59,10 @@ namespace SiAman.Infrastructure.Services
 
             await PutFileAsync(remotePath, bytes, file.ContentType, ct);
 
-            // URL download file tunggal dari Nextcloud public share
-            // Format yang benar: /s/TOKEN/download?path=/folder/filename.jpg
-            // Jika share di-root di folder "SiAman", path relatif dimulai dari /incidents/...
-            var sharePath = $"/{folder}/{fileName}";
+            // Path dalam share: jika BaseFolder = "SiAman", file ada di /SiAman/incidents/2026-06/file.jpg
+            var sharePath = string.IsNullOrEmpty(_baseFolder)
+                ? $"/{folder}/{fileName}"
+                : $"/{_baseFolder}/{folder}/{fileName}";
             return $"{_publicShareUrl}/download?path={Uri.EscapeDataString(sharePath)}";
         }
 

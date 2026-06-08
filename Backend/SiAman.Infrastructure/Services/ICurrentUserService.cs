@@ -33,4 +33,7 @@ public class CurrentUserService : ICurrentUserService
 
     public bool IsAuthenticated
         => User?.Identity?.IsAuthenticated ?? false;
+
+    public bool IsAdmin
+        => User?.FindFirst(ClaimTypes.Role)?.Value == "Admin";
 }

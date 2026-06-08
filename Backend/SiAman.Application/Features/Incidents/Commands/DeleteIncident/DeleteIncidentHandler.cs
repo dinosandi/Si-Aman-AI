@@ -16,7 +16,7 @@ public class DeleteIncidentHandler(
         var incident = await incidentRepository.GetByIdAsync(request.IncidentId, cancellationToken)
             ?? throw new NotFoundException("Incident tidak ditemukan.");
 
-        if (incident.UserId != currentUserService.UserId!.Value)
+        if (!currentUserService.IsAdmin && incident.UserId != currentUserService.UserId!.Value)
             throw new NotFoundException("Anda tidak memiliki akses untuk menghapus incident ini.");
 
         // Hapus gambar dari storage jika ada

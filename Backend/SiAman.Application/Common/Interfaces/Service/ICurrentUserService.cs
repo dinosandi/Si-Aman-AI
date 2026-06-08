@@ -7,6 +7,7 @@ namespace SiAman.Application.Common.Interfaces.Service
         Guid? UserId { get; }
         string? Email { get; }
         bool IsAuthenticated { get; }
+        bool IsAdmin { get; }
     }
 
 }
